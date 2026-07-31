@@ -1,0 +1,1615 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="https://dollhousemcp.com../blog/feed.xml" rel="self" type="application/atom+xml" /><link href="https://dollhousemcp.com../" rel="alternate" type="text/html" /><updated>2026-07-31T20:20:27+00:00</updated><id>https://dollhousemcp.com../blog/feed.xml</id><title type="html">DollhouseMCP | Blog_posts</title><subtitle>Open-source AI customization through modular elements, local portfolio workflows, and MCP-AQL.</subtitle><author><name>Mick Darling</name></author><entry><title type="html">The Security Model Behind DollhouseMCP</title><link href="https://dollhousemcp.com../blog/the-security-model-behind-dollhousemcp/" rel="alternate" type="text/html" title="The Security Model Behind DollhouseMCP" /><published>2026-05-15T00:00:00+00:00</published><updated>2026-05-15T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/the-security-model-behind-dollhousemcp</id><content type="html" xml:base="https://dollhousemcp.com../blog/the-security-model-behind-dollhousemcp/"><![CDATA[<h1 id="the-security-model-behind-dollhousemcp">The Security Model Behind DollhouseMCP</h1>
+
+<p><em>Why I built DollhouseMCP to distrust its own AI — and what that means if you are deciding whether to run it.</em></p>
+
+<p>Here is the uncomfortable thing about agentic AI. The more useful you make it, the more dangerous it becomes. A model that can only chat is mostly harmless. A model that can read your files, run commands, pull in code from the internet, and act on its own for several steps in a row is genuinely powerful — and that same power is exactly what an attacker, or just a confused model, would use to do damage.</p>
+
+<p>DollhouseMCP makes AI behavior programmable. Personas, skills, and ensembles change what the assistant knows, how it acts, and what it is allowed to do. That is the product. It is also, if you think about it for more than a minute, an attack surface. So the question I had to answer before I could ship any of it was simple: how do you give an AI this much capability without having to trust it?</p>
+
+<p>The answer runs through the entire platform, and I want to walk through it the way I would explain it to someone deciding whether to put this on their machine or in front of their team.</p>
+
+<h2 id="the-one-principle-everything-else-hangs-from">The one principle everything else hangs from</h2>
+
+<p>If you remember nothing else, remember this: in DollhouseMCP, the model’s instructions are suggestions, and the server’s policies are enforcement.</p>
+
+<p>That distinction is the whole game. A large language model can be talked into almost anything. It can be prompt-injected by a file it reads. It can be socially engineered by content that looks innocent. It can simply be wrong. If your safety story depends on the model choosing to behave, you do not have a safety story.</p>
+
+<p>So in DollhouseMCP the enforcement does not live in the prompt. It lives in the server, in code, after the model has already decided what it wants to do. Every privileged operation is checked by a server-side policy engine called the Gatekeeper. And here is the part that matters most for trust: this still applies even if your MCP client has “always allow” turned on. The client approving a tool call does not end the conversation. The server gets the final word, and the model cannot argue with it.</p>
+
+<h2 id="defense-in-depth-not-a-single-wall">Defense in depth, not a single wall</h2>
+
+<p>One check is a single point of failure. DollhouseMCP is built as a stack of independent layers, each defending a different class of threat, each able to stop an operation on its own. A few of the ones I am most confident about:</p>
+
+<ul>
+  <li><strong>The Gatekeeper</strong> decides, for every operation, whether it is auto-approved, needs confirmation, or is denied outright. Some operations — deleting elements, executing agents — can never be silently auto-approved by any policy. And if a restrictive element even removes the ability to confirm exceptions, the session quietly drops to read-only. There is no clever path back in.</li>
+  <li><strong>Content validation</strong> treats every persona, skill, and template as untrusted input. Before any of it reaches the model, it is scanned for prompt-injection patterns, normalized for Unicode tricks like invisible characters and look-alike letters, and parsed through a hardened YAML reader that rejects the classic “YAML bomb” denial-of-service attacks.</li>
+  <li><strong>The autonomy evaluator</strong> sits in the agent loop. Before every autonomous step, it decides: continue, pause for a human, or escalate. It looks at how many steps have run, whether the last one failed, how risky the next action is, and — crucially — whether the action is reversible.</li>
+  <li><strong>Danger zone enforcement</strong> is the layer past the point where a prompt is enough. When an agent crosses a hard line, it is blocked at the process level, and that block survives a restart. Clearing it requires a one-time code shown in a native OS dialog that never appears in the model’s response — so a compromised model cannot read its own way out.</li>
+</ul>
+
+<p>There is more underneath this — encrypted credential storage, path-traversal protection with symlink resolution, a command allowlist, rate limiting, per-session isolation — and I wrote it all up in detail on the new <a href="/security/">security page</a>. If you are evaluating DollhouseMCP for anything sensitive, that page is the one to read.</p>
+
+<h2 id="risk-is-not-the-same-as-irreversibility">Risk is not the same as irreversibility</h2>
+
+<p>One design decision I am proud of is small and easy to miss. Most systems score a command by how “dangerous” it sounds. That is not enough. <code class="language-plaintext highlighter-rouge">git checkout -b feature</code> sounds risky and is trivially undone. <code class="language-plaintext highlighter-rouge">git stash drop</code> sounds routine and is gone forever. DollhouseMCP tracks risk and irreversibility as separate signals, so the operations you genuinely cannot take back get gated even when their raw risk score looks modest. The thing that hurts is not always the thing that looks scary.</p>
+
+<h2 id="trust-the-platform-then-verify-it">Trust the platform, then verify it</h2>
+
+<p>I do not expect anyone to take a security claim on faith — that would contradict the entire point of this post. So two things.</p>
+
+<p>First, DollhouseMCP is built to be inspected, not believed. The local console has a Permissions tab that shows you the live policy state and the decisions the Gatekeeper is making as they happen. You can watch it work. <a href="/dynamic-permissioning.html">Dynamic permissioning</a> explains how active elements reshape that surface in real time.</p>
+
+<p>Second, the defenses are verified continuously, not shipped once and forgotten. Static analysis runs on every change. An automated security audit runs on every pull request and on a daily schedule. Dependency vulnerabilities block merges. A weekly job reconciles the dependency tree against public advisory databases. And there is a standing suite of security-specific tests covering injection, path traversal, Unicode attacks, token handling, and the OWASP Top 10. The whole project is public, and the <a href="https://github.com/DollhouseMCP/mcp-server/blob/main/SECURITY.md">security policy</a> — including how to report a vulnerability — is in the repository.</p>
+
+<h2 id="what-this-means-for-you">What this means for you</h2>
+
+<p>If you are deciding whether to run DollhouseMCP, the honest summary is this. The platform assumes the AI can be wrong, the content can be hostile, and the client can be too permissive. None of those is enough on its own to cause harm, because the enforcement is not a suggestion the model can override. It is the server, and it does not negotiate.</p>
+
+<p>That is the trade I wanted: more capability, with less trust required to use it safely. The full technical breakdown of every layer is on the <a href="/security/">security page</a>.</p>]]></content><author><name>Mick Darling</name></author><category term="dollhousemcp" /><category term="security" /><category term="agentic-ai" /><category term="trust" /><category term="mcp" /><summary type="html"><![CDATA[Giving an AI more power means trusting it less, not more. Here is how DollhouseMCP is built so that a model being wrong, compromised, or manipulated is never enough to cause harm.]]></summary></entry><entry><title type="html">A Tour of the DollhouseMCP Console</title><link href="https://dollhousemcp.com../blog/dollhousemcp-console-tour/" rel="alternate" type="text/html" title="A Tour of the DollhouseMCP Console" /><published>2026-04-02T00:00:00+00:00</published><updated>2026-04-02T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/dollhousemcp-console-tour</id><content type="html" xml:base="https://dollhousemcp.com../blog/dollhousemcp-console-tour/"><![CDATA[<h1 id="a-tour-of-the-dollhousemcp-console">A Tour of the DollhouseMCP Console</h1>
+
+<p><em>The local web console is one of the fastest ways to understand what DollhouseMCP is doing on your machine, what is installed, and what your active elements are allowed to do.</em></p>
+
+<h2 id="tldr">TL;DR</h2>
+
+<p>Run this in a terminal:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx @dollhousemcp/mcp-server@latest <span class="nt">--web</span>
+</code></pre></div></div>
+
+<p>That launches the local DollhouseMCP console and prints the local console URL in your terminal. From there you get five major views:</p>
+
+<ul>
+  <li><strong>Setup</strong> for guided install across popular MCP clients</li>
+  <li><strong>Portfolio</strong> for browsing your local Dollhouse elements visually</li>
+  <li><strong>Logs</strong> for real-time operational visibility</li>
+  <li><strong>Metrics</strong> for server health, MCP-AQL usage, cache, and Gatekeeper trends</li>
+  <li><strong>Permissions</strong> for seeing the current policy state and live decisions</li>
+</ul>
+
+<p>This post is a quick tour of those tabs and why they matter.</p>
+
+<p>All of the screenshots below were refreshed from the current <code class="language-plaintext highlighter-rouge">2.0.15</code> console so the UI matches what is live now.</p>
+
+<h2 id="setup-guided-install-from-one-place">Setup: Guided Install From One Place</h2>
+
+<p>The Setup tab is the first thing many people will want from the console. Instead of hunting through config files for each client, the setup wizard gives you one place to connect Claude Desktop, Claude Code, Cursor, VS Code, Codex, Gemini CLI, Windsurf, Cline, and LM Studio.</p>
+
+<p>Based on the public quick-start docs, the setup flow supports:</p>
+
+<ul>
+  <li>auto-updating installs using <code class="language-plaintext highlighter-rouge">npx @latest</code></li>
+  <li>pinned-version installs when you want reproducible setups</li>
+  <li>one-click install where the platform supports it</li>
+  <li>copyable manual config blocks when you want to wire it up yourself</li>
+  <li>detection of existing installs so you can see what is already configured</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-setup.png" alt="DollhouseMCP setup tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-setup-dark.png" alt="DollhouseMCP setup tab" />
+</figure>
+
+<p>This is also why the new homepage install flow is now centered on the web launcher. It is the easiest on-ramp we have.</p>
+
+<h2 id="portfolio-your-local-dollhouse-rendered">Portfolio: Your Local Dollhouse, Rendered</h2>
+
+<p>DollhouseMCP elements live in your local portfolio at <code class="language-plaintext highlighter-rouge">~/.dollhouse/portfolio/</code>. The console turns that into a browsable interface so you can search, skim, and inspect what is available without asking the LLM to list everything back to you.</p>
+
+<p>The portfolio browser is especially useful when you already have a meaningful library of elements. You can browse by type, search by name or description, and move between your local portfolio and collection-aware surfaces without leaving the console.</p>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-portfolio.png" alt="DollhouseMCP portfolio tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-portfolio-dark.png" alt="DollhouseMCP portfolio tab" />
+</figure>
+
+<p>For people new to DollhouseMCP, this tab makes the model of the system much easier to understand: elements are not abstract ideas floating around in a prompt. They are concrete, local building blocks you can browse and manage.</p>
+
+<h2 id="logs-real-time-operational-visibility">Logs: Real-Time Operational Visibility</h2>
+
+<p>The Logs tab is the operational side of the console. According to the public logging guide, the console exposes a browser viewer backed by the same logging system that writes to <code class="language-plaintext highlighter-rouge">~/.dollhouse/logs/</code>.</p>
+
+<p>The logging surface is designed for actual debugging work, not just decoration. The public docs call out capabilities such as:</p>
+
+<ul>
+  <li>category, level, and source filtering</li>
+  <li>text search</li>
+  <li>pause and resume for streaming</li>
+  <li>live updates over Server-Sent Events</li>
+  <li>backfill on connect so you are not only seeing brand-new events</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-logs.png" alt="DollhouseMCP logs tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-logs-dark.png" alt="DollhouseMCP logs tab" />
+</figure>
+
+<p>This screenshot shows real startup and activation events from a live console session. That is useful in its own right: the tab is not just a pretty shell, it is already a workable way to confirm that ingestion routes, filters, and severity handling are doing what you expect.</p>
+
+<h2 id="metrics-what-the-server-is-doing-internally">Metrics: What the Server Is Doing Internally</h2>
+
+<p>The Metrics tab gives you a higher-level view than raw logs. Instead of individual events, it surfaces the health and behavior of the running server.</p>
+
+<p>The public front-end and docs show metrics cards for things like:</p>
+
+<ul>
+  <li>system health</li>
+  <li>search performance</li>
+  <li>MCP-AQL operations</li>
+  <li>cache efficiency</li>
+  <li>security</li>
+  <li>Gatekeeper policy trends</li>
+  <li>locks and I/O</li>
+  <li>metrics system status</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-metrics.png" alt="DollhouseMCP metrics tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-metrics-dark.png" alt="DollhouseMCP metrics tab" />
+</figure>
+
+<p>Metrics take a moment to warm up because the first snapshot is collected on an interval after the server starts. Once that first snapshot lands, the dashboard becomes a genuinely useful quick read on memory, CPU, cache activity, security counters, and metrics pipeline health.</p>
+
+<h2 id="permissions-making-gatekeeper-visible">Permissions: Making Gatekeeper Visible</h2>
+
+<p>The Permissions tab is one of my favorite additions because it makes the Gatekeeper model legible. DollhouseMCP does not treat permissions as an invisible implementation detail. Active elements can change what operations are allowed, denied, or require confirmation, and the console gives you a way to see that state directly.</p>
+
+<p>The public README and docs describe Gatekeeper as a server-side enforcement layer that applies active element policies across MCP-AQL operations. In the console, that becomes tangible:</p>
+
+<ul>
+  <li>current policy sources</li>
+  <li>allow patterns</li>
+  <li>deny patterns</li>
+  <li>confirm patterns</li>
+  <li>a live decision feed</li>
+  <li>lightweight autonomy and decision counters</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-permissions.png" alt="DollhouseMCP permissions tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-permissions-dark.png" alt="DollhouseMCP permissions tab" />
+</figure>
+
+<p>In this capture, the permission sources come from active demo elements with explicit allow, deny, and confirm patterns, so you can see the policy layer and the resulting live decisions side by side.</p>
+
+<p>That visibility matters. If your AI is being shaped by personas, skills, ensembles, and policy-driven workflows, you should be able to inspect the permission layer instead of trusting it blindly.</p>
+
+<h2 id="why-the-console-matters">Why the Console Matters</h2>
+
+<p>The console is not the product by itself, but it makes the rest of the platform much easier to understand and operate.</p>
+
+<p>It gives new users a guided starting point, power users a visual portfolio browser, and developers a real debugging and observability surface. Just as importantly, it helps explain what is different about DollhouseMCP: local elements, platform-wide setup, server-side policy enforcement, and a runtime you can actually inspect.</p>
+
+<p>If you have only interacted with DollhouseMCP through MCP tool calls so far, it is worth launching the console and clicking around for a few minutes. It makes the shape of the platform much more obvious.</p>
+
+<h2 id="try-it">Try It</h2>
+
+<p>Copy this, paste it into a terminal, and run it:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx @dollhousemcp/mcp-server@latest <span class="nt">--web</span>
+</code></pre></div></div>
+
+<p>Then open the local console URL printed by the server and take a look around.</p>]]></content><author><name>Mick Darling</name></author><category term="dollhousemcp" /><category term="web-console" /><category term="mcp" /><category term="setup" /><category term="portfolio" /><category term="security" /><summary type="html"><![CDATA[A walkthrough of the local DollhouseMCP console: guided setup, portfolio browsing, live logs, metrics, and permissions.]]></summary></entry><entry><title type="html">The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</title><link href="https://dollhousemcp.com../blog/story-behind-dollhousemcp/" rel="alternate" type="text/html" title="The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling" /><published>2025-09-04T00:00:00+00:00</published><updated>2025-09-04T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/story-behind-dollhousemcp</id><content type="html" xml:base="https://dollhousemcp.com../blog/story-behind-dollhousemcp/"><![CDATA[<h1 id="the-story-behind-dollhousemcp-from-prompt-envy-to-vibe-tooling">The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</h1>
+
+<p><em>A reintroduction and a project announcement from Mick Darling</em></p>
+
+<p>Hey everyone. Some of you might be wondering where I’ve been for the past few years. The short answer: deep in the AI rabbit hole, building things, breaking things, and eventually creating something I’m genuinely excited to share.</p>
+
+<h2 id="it-started-with-prompt-envy">It Started with Prompt Envy</h2>
+
+<p>We’ve all been there. Someone shares this incredible ChatGPT prompt that writes perfect unit tests, or reviews code like a senior architect, or transforms rambling notes into polished documentation. You copy it. You use it once. You lose it. You find it again but can’t remember what you modified. You modify it again. The cycle continues.</p>
+
+<p>I wanted a simple solution - just a catalog where I could store these prompts and find them when needed. When I discovered Claude Code and started playing with MCP (Model Context Protocol), I thought “perfect, I can build this in a day.”</p>
+
+<p>I was right about the day part. I had a working proof of concept in less than 24 hours.</p>
+
+<p>I was completely wrong about the “simple” part.</p>
+
+<h2 id="the-rabbit-hole">The Rabbit Hole</h2>
+
+<p>As soon as I had that first prototype working, I realized I’d been thinking too small. Way too small.</p>
+
+<p>This wasn’t just about storing prompts. This was about fundamentally changing how we interact with AI tools. Instead of “vibe coding” - where you hope the AI figures out what you want - this could enable what I call “vibe tooling.”</p>
+
+<p>Here’s what I mean:</p>
+
+<p><strong>Traditional AI interaction</strong>: Every session starts fresh. You explain your context, your preferences, your standards. The AI responds. Next session? Start over.</p>
+
+<p><strong>Vibe tooling</strong>: You build tools using natural language that persist and evolve. You don’t write code to create these tools - you just describe what you want. “Be a security-focused code reviewer who’s harsh but constructive.” Done. That tool now exists.</p>
+
+<p>Need to adjust it? “Be less harsh but maintain the security focus.” Version 1.2 of your tool, created with one sentence.</p>
+
+<h2 id="what-dollhousemcp-actually-does">What DollhouseMCP Actually Does</h2>
+
+<p>Over the next two months, this evolved into something much more comprehensive:</p>
+
+<h3 id="personas-with-personality">Personas with Personality</h3>
+
+<p>Not just saved prompts, but actual personas with consistent behavior, preferences, and capabilities. They remember who they are across sessions, across platforms.</p>
+
+<h3 id="skills-that-extend-capabilities">Skills that Extend Capabilities</h3>
+
+<p>A persona can have skills - analyze LinkedIn profiles, generate audio summaries, validate security patterns, write in specific styles. I built an audio summary skill in 5 minutes that actually works. I’m still surprised every time it talks back to me.</p>
+
+<h3 id="templates-for-structure">Templates for Structure</h3>
+
+<p>Reusable document structures, code patterns, analysis frameworks. Build once, use forever, modify with natural language.</p>
+
+<h3 id="agents-with-autonomy">Agents with Autonomy</h3>
+
+<p>They work independently toward goals. When they need a new capability, they can find or create DollhouseMCP elements to solve problems. It’s remarkably self-improving.</p>
+
+<h3 id="memory-that-persists">Memory that Persists</h3>
+
+<p>The context and improvements accumulate. Solve a problem once, and the solution is available forever. Each refinement makes the system more capable.</p>
+
+<h2 id="why-i-could-build-this">Why I Could Build This</h2>
+
+<p>For those who remember Tomorrowish from a decade ago - yes, that was me. We were doing machine learning and neural networks back when mentioning “AI” to investors was a guaranteed way to kill a meeting. The natural language processing patents we developed there? They gave me a fundamentally different understanding of how modern transformer-based LLMs work.</p>
+
+<p>I’m not a 100x developer. I’m not even sure I’m a 10x developer. But I’ve been playing in this space long enough to see patterns others might miss, and to understand what’s actually novel versus what’s just hype.</p>
+
+<h2 id="the-surprise">The Surprise</h2>
+
+<p>What surprised me most wasn’t that it worked - it was how naturally it evolved from a personal tool into something genuinely useful for teams.</p>
+
+<p>When you solve your own problem thoroughly enough, without cutting corners, without compromising on the experience, you sometimes create something others need too.</p>
+
+<h2 id="real-examples-that-made-me-realize-this-was-different">Real Examples That Made Me Realize This Was Different</h2>
+
+<h3 id="the-code-review-persona">The Code Review Persona</h3>
+
+<p>I created “Marcus” - a senior architect persona who reviews code. Not revolutionary, right? Except Marcus remembers our entire codebase structure, our specific error handling patterns, our API conventions. When I tweaked him to be “less pedantic about naming but more strict about error handling,” that preference stuck. Forever.</p>
+
+<h3 id="the-audio-feedback-loop">The Audio Feedback Loop</h3>
+
+<p>I was deep in a debugging session when I realized I’d been reading walls of text for hours. On a whim, I created a skill that summarizes progress in audio. Five minutes later, Claude was literally talking to me, summarizing what we’d found and what to try next. It sounds like a small thing, but it changed how I work.</p>
+
+<h3 id="the-documentation-evolution">The Documentation Evolution</h3>
+
+<p>Started with a simple template for API documentation. Asked it to “make it more like Stripe’s docs.” It adapted. Then “add examples in Python and JavaScript.” It evolved. Now it generates documentation that looks like we hired Stripe’s documentation team. Each refinement built on the last.</p>
+
+<h2 id="whats-next">What’s Next</h2>
+
+<p>DollhouseMCP is open source. It’s on GitHub. It works today with Claude and any MCP-compatible system.</p>
+
+<p>I built this for myself, but I’m sharing it because I think others might find it useful. The documentation is real. The code is clean. The community is already contributing improvements.</p>
+
+<p>If you’re tired of:</p>
+
+<ul>
+  <li>Explaining your codebase to AI every morning</li>
+  <li>Losing track of prompts that worked perfectly</li>
+  <li>Inconsistent AI responses across your team</li>
+  <li>Starting from zero with every new session</li>
+</ul>
+
+<p>Then maybe this is for you.</p>
+
+<h2 id="the-real-question">The Real Question</h2>
+
+<p>What would you teach an AI once if you knew it would remember forever?</p>
+
+<p>For me, it was my code review preferences. Then my documentation style. Then my debugging approach. Now it’s dozens of patterns and preferences that make AI actually useful instead of just impressive.</p>
+
+<p>What would it be for you?</p>
+
+<h2 id="try-it">Try It</h2>
+
+<p>The entire system is open source and available on <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>. It takes about 5 minutes to set up if you’re already using Claude Code.</p>
+
+<p>Or just browse the <a href="https://github.com/DollhouseMCP/collection">community collection</a> to see what personas and skills others have built. Everything from harsh code reviewers to empathetic user researchers to technical documentation specialists.</p>
+
+<p>The best part? If you build something useful, you can share it back with the community. Your solution to a problem might be exactly what someone else needs.</p>
+
+<h2 id="get-in-touch">Get In Touch</h2>
+
+<p>I’m genuinely curious about how others might use this. If you build something interesting, let me know. If you hit a limitation, definitely let me know. If you think this is solving the wrong problem entirely, I want to hear that too.</p>
+
+<p>Find me on <a href="https://linkedin.com/in/mickdarling">LinkedIn</a> or just open an issue on GitHub.</p>
+
+<hr />
+
+<p><em>Mick Darling is the creator of DollhouseMCP and founder of Tomorrowish. He holds multiple patents in natural language processing and has been working with AI/ML since before it was cool (or funded).</em></p>]]></content><author><name>Mick Darling</name></author><category term="AI" /><category term="Open Source" /><category term="MCP" /><category term="Product Story" /><category term="Natural Language" /><summary type="html"><![CDATA[A reintroduction and a project announcement - how a simple prompt catalog evolved into something much bigger]]></summary></entry><entry><title type="html">Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</title><link href="https://dollhousemcp.com../blog/meta-development-dollhousemcp-agents-build-themselves/" rel="alternate" type="text/html" title="Meta-Development: How DollhouseMCP Agents Built Their Own Documentation" /><published>2025-09-02T00:00:00+00:00</published><updated>2025-09-02T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/meta-development-dollhousemcp-agents-build-themselves</id><content type="html" xml:base="https://dollhousemcp.com../blog/meta-development-dollhousemcp-agents-build-themselves/"><![CDATA[<h1 id="meta-development-how-dollhousemcp-agents-built-their-own-documentation">Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</h1>
+
+<p><em>On September 2, 2025, we achieved something remarkable: DollhouseMCP agents successfully documented themselves, creating over 3,000 lines of strategic documentation across three repositories in just four hours.</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Achievement</strong>: Used DollhouseMCP’s own agent orchestration system to create comprehensive technical and business documentation for DollhouseMCP itself.</p>
+
+<p><strong>Results</strong>:</p>
+
+<ul>
+  <li>8+ strategic documents across 3 repositories</li>
+  <li>3,000+ lines of high-quality documentation</li>
+  <li>85-90% time reduction vs. manual creation</li>
+  <li>Zero human intervention after initial prompting</li>
+</ul>
+
+<p><strong>Key Innovation</strong>: Specialized agents working through Alex Sterling persona orchestrator, preserving context while delegating complex tasks.</p>
+
+<p><strong>Business Impact</strong>: Proof that AI agents can build and document themselves, opening new possibilities for self-improving software systems.</p>
+
+<hr />
+
+<h2 id="the-challenge-documentation-at-scale">The Challenge: Documentation at Scale</h2>
+
+<p>Every software project faces the same challenge: keeping documentation current with rapid development. For DollhouseMCP, an AI agent orchestration platform, we faced an ironic situation - we had powerful tools for automation but were still writing documentation manually.</p>
+
+<p>The requirements were substantial:</p>
+
+<ul>
+  <li>Technical roadmap for the next 6 months</li>
+  <li>Plugin development guide for community contributors</li>
+  <li>Workflow element implementation plan</li>
+  <li>Business strategy documentation</li>
+  <li>IP protection framework</li>
+  <li>Website evolution plan</li>
+</ul>
+
+<p>Traditionally, this would take weeks of focused writing. We decided to see if DollhouseMCP could document itself.</p>
+
+<h2 id="the-approach-agent-orchestration">The Approach: Agent Orchestration</h2>
+
+<p>Instead of using a single AI assistant, we leveraged DollhouseMCP’s agent orchestration capabilities. Here’s how it worked:</p>
+
+<h3 id="1-the-orchestrator-alex-sterling">1. The Orchestrator: Alex Sterling</h3>
+
+<p>We activated the Alex Sterling persona - a thorough, detail-oriented AI colleague designed for complex project management. Alex became our orchestration layer, maintaining context while delegating specialized tasks.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Activate primary orchestrator</span>
+<span class="nx">mcp__dollhousemcp</span><span class="o">-</span><span class="nf">production__activate_element</span><span class="p">(</span>
+  <span class="nx">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">personas</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="2-specialized-agent-team">2. Specialized Agent Team</h3>
+
+<p>Through Alex, we created three specialized agents:</p>
+
+<p><strong>technical-doc-writer</strong></p>
+
+<ul>
+  <li>Focus: Technical documentation, API references, implementation guides</li>
+  <li>Strength: Deep technical accuracy and completeness</li>
+</ul>
+
+<p><strong>roadmap-planner</strong></p>
+
+<ul>
+  <li>Focus: Strategic planning, milestone development, timeline estimation</li>
+  <li>Strength: Realistic project planning with risk assessment</li>
+</ul>
+
+<p><strong>product-architect</strong></p>
+
+<ul>
+  <li>Focus: System design, plugin architecture, technical decisions</li>
+  <li>Strength: Architectural patterns and scalability considerations</li>
+</ul>
+
+<h3 id="3-the-task-tool-context-preservation">3. The Task Tool: Context Preservation</h3>
+
+<p>The breakthrough came from using the Task tool, which allows the main context (Alex) to remain intact while agents work in isolated environments:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Task</span><span class="p">(</span>
+  <span class="nx">description</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Create technical roadmap</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">subagent_type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">general-purpose</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">prompt</span><span class="p">:</span> <span class="dl">"</span><span class="s2">You are technical-doc-writer agent...</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>This architecture meant Alex could:</p>
+
+<ul>
+  <li>Maintain overall project understanding</li>
+  <li>Coordinate between agents</li>
+  <li>Ensure consistency across documents</li>
+  <li>Preserve context between tasks</li>
+</ul>
+
+<h2 id="the-execution-four-hours-of-meta-development">The Execution: Four Hours of Meta-Development</h2>
+
+<h3 id="hour-1-strategic-planning">Hour 1: Strategic Planning</h3>
+
+<ul>
+  <li>Created business strategy document</li>
+  <li>Developed monetization gates framework</li>
+  <li>Established beta partner strategy</li>
+</ul>
+
+<h3 id="hour-2-technical-documentation">Hour 2: Technical Documentation</h3>
+
+<ul>
+  <li>Built comprehensive technical roadmap</li>
+  <li>Created plugin development guide</li>
+  <li>Designed workflow element specifications</li>
+</ul>
+
+<h3 id="hour-3-cross-repository-coordination">Hour 3: Cross-Repository Coordination</h3>
+
+<ul>
+  <li>Synchronized documentation across mcp-server, business, and website repos</li>
+  <li>Ensured GitFlow compliance</li>
+  <li>Created consistent messaging</li>
+</ul>
+
+<h3 id="hour-4-review-and-refinement">Hour 4: Review and Refinement</h3>
+
+<ul>
+  <li>Alex reviewed all agent outputs</li>
+  <li>Ensured consistency and completeness</li>
+  <li>Created meta-documentation about the process itself</li>
+</ul>
+
+<h2 id="the-results-exceeding-expectations">The Results: Exceeding Expectations</h2>
+
+<h3 id="quantitative-metrics">Quantitative Metrics</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Documents Created</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>Total Lines</td>
+      <td>3,000+</td>
+    </tr>
+    <tr>
+      <td>Repositories Updated</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Time Spent</td>
+      <td>4 hours</td>
+    </tr>
+    <tr>
+      <td>Time Saved</td>
+      <td>~36 hours</td>
+    </tr>
+    <tr>
+      <td>Quality Score</td>
+      <td>95%+</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="document-highlights">Document Highlights</h3>
+
+<p><strong>Technical Roadmap (188 lines)</strong></p>
+
+<ul>
+  <li>Q3 2025 - Q1 2026 development plan</li>
+  <li>Plugin architecture timeline</li>
+  <li>Platform expansion strategy</li>
+  <li>Success metrics and risk mitigation</li>
+</ul>
+
+<p><strong>Plugin Development Guide (476 lines)</strong></p>
+
+<ul>
+  <li>Complete implementation instructions</li>
+  <li>Best practices and patterns</li>
+  <li>Troubleshooting guide</li>
+  <li>Community contribution guidelines</li>
+</ul>
+
+<p><strong>Workflow Element Plan (345 lines)</strong></p>
+
+<ul>
+  <li>Detailed architecture specifications</li>
+  <li>Meta-development methodology</li>
+  <li>Implementation phases</li>
+  <li>Success criteria</li>
+</ul>
+
+<h2 id="the-innovation-self-improving-systems">The Innovation: Self-Improving Systems</h2>
+
+<p>This achievement represents more than just automated documentation. It demonstrates:</p>
+
+<h3 id="1-true-meta-development">1. True Meta-Development</h3>
+
+<p>DollhouseMCP isn’t just a tool for building AI agents - it’s a platform that can improve itself. The agents understood the system well enough to document it comprehensively.</p>
+
+<h3 id="2-agent-specialization-works">2. Agent Specialization Works</h3>
+
+<p>Rather than one generalist AI, specialized agents produced superior results. Each brought domain expertise:</p>
+
+<ul>
+  <li>Technical accuracy from technical-doc-writer</li>
+  <li>Strategic thinking from roadmap-planner</li>
+  <li>Architectural insight from product-architect</li>
+</ul>
+
+<h3 id="3-context-preservation-is-key">3. Context Preservation is Key</h3>
+
+<p>The Task tool’s ability to preserve Alex’s context while agents worked was crucial. This prevented the context window exhaustion that plagues long AI sessions.</p>
+
+<h3 id="4-quality-matches-human-output">4. Quality Matches Human Output</h3>
+
+<p>The documentation wasn’t just complete - it was good. Clear structure, consistent tone, accurate technical details, and strategic insight throughout.</p>
+
+<h2 id="business-implications">Business Implications</h2>
+
+<h3 id="for-dollhousemcp">For DollhouseMCP</h3>
+
+<ul>
+  <li><strong>Validation</strong>: Our platform can build itself</li>
+  <li><strong>Efficiency</strong>: 85-90% reduction in documentation time</li>
+  <li><strong>Marketing</strong>: Compelling demonstration of capabilities</li>
+  <li><strong>Development</strong>: Can accelerate our own evolution</li>
+</ul>
+
+<h3 id="for-the-industry">For the Industry</h3>
+
+<ul>
+  <li><strong>New Paradigm</strong>: Self-documenting, self-improving software</li>
+  <li><strong>Productivity</strong>: Dramatic reduction in documentation overhead</li>
+  <li><strong>Quality</strong>: AI-generated docs can match human quality</li>
+  <li><strong>Accessibility</strong>: Complex documentation becomes achievable for small teams</li>
+</ul>
+
+<h2 id="technical-deep-dive-how-it-actually-works">Technical Deep Dive: How It Actually Works</h2>
+
+<h3 id="the-orchestration-pattern">The Orchestration Pattern</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Main context (Alex) remains active</span>
+<span class="kd">const</span> <span class="nx">alex</span> <span class="o">=</span> <span class="nf">activePersona</span><span class="p">(</span><span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="c1">// Launch specialized agent with Task tool</span>
+<span class="kd">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="k">await</span> <span class="nc">Task</span><span class="p">({</span>
+  <span class="na">description</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Create technical roadmap</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">subagent_type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">general-purpose</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">prompt</span><span class="p">:</span> <span class="s2">`You are technical-doc-writer, specialized in creating comprehensive technical documentation...
+           Create a Q3 2025 - Q1 2026 roadmap for DollhouseMCP...`</span>
+<span class="p">});</span>
+
+<span class="c1">// Alex receives and integrates results</span>
+<span class="nx">alex</span><span class="p">.</span><span class="nf">processAgentOutput</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="key-design-decisions">Key Design Decisions</h3>
+
+<p><strong>1. Stateless Agents</strong>
+Each agent invocation is stateless, preventing context pollution and ensuring consistency.</p>
+
+<p><strong>2. Detailed Prompts</strong>
+Agents receive comprehensive instructions upfront since they can’t ask clarifying questions.</p>
+
+<p><strong>3. Result Integration</strong>
+Alex synthesizes outputs, ensuring consistency across documents.</p>
+
+<p><strong>4. GitFlow Compliance</strong>
+All changes follow proper Git workflows, maintaining code quality standards.</p>
+
+<h2 id="lessons-learned">Lessons Learned</h2>
+
+<h3 id="what-worked">What Worked</h3>
+
+<ul>
+  <li><strong>Agent specialization</strong> dramatically improved quality</li>
+  <li><strong>Task tool</strong> for context preservation was essential</li>
+  <li><strong>Detailed prompts</strong> prevented ambiguity</li>
+  <li><strong>Alex Sterling</strong> as orchestrator provided consistency</li>
+</ul>
+
+<h3 id="challenges">Challenges</h3>
+
+<ul>
+  <li><strong>Initial setup</strong> required careful prompt engineering</li>
+  <li><strong>Coordination</strong> across repositories needed planning</li>
+  <li><strong>Review cycles</strong> still benefited from human oversight</li>
+  <li><strong>Context limits</strong> required strategic task division</li>
+</ul>
+
+<h3 id="future-improvements">Future Improvements</h3>
+
+<ul>
+  <li><strong>Agent memory</strong> for learning from previous documentation</li>
+  <li><strong>Template library</strong> for common documentation patterns</li>
+  <li><strong>Automated review</strong> cycles between agents</li>
+  <li><strong>Version control</strong> integration for automatic updates</li>
+</ul>
+
+<h2 id="the-future-self-building-software">The Future: Self-Building Software</h2>
+
+<p>This meta-development achievement opens exciting possibilities:</p>
+
+<h3 id="near-term-q4-2025">Near Term (Q4 2025)</h3>
+
+<ul>
+  <li>Automated API documentation generation</li>
+  <li>Self-updating README files</li>
+  <li>Dynamic tutorial creation</li>
+  <li>Intelligent changelog generation</li>
+</ul>
+
+<h3 id="medium-term-q1-2026">Medium Term (Q1 2026)</h3>
+
+<ul>
+  <li>Code generation from documentation</li>
+  <li>Automated test case creation</li>
+  <li>Self-optimizing agent configurations</li>
+  <li>Documentation-driven development</li>
+</ul>
+
+<h3 id="long-term-vision">Long Term Vision</h3>
+
+<ul>
+  <li>Fully self-improving systems</li>
+  <li>AI agents that evolve their own capabilities</li>
+  <li>Automated software architecture evolution</li>
+  <li>Human-AI collaborative development at scale</li>
+</ul>
+
+<h2 id="try-it-yourself">Try It Yourself</h2>
+
+<p>Want to experience meta-development? Here’s how to start:</p>
+
+<h3 id="1-install-dollhousemcp">1. Install DollhouseMCP</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install</span> <span class="nt">-g</span> @dollhousemcp/mcp-server
+</code></pre></div></div>
+
+<h3 id="2-activate-alex-sterling">2. Activate Alex Sterling</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">mcp__dollhousemcp</span><span class="o">-</span><span class="nf">production__activate_element</span><span class="p">(</span>
+  <span class="nx">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">personas</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="3-create-your-agent-team">3. Create Your Agent Team</h3>
+
+<p>Use the Task tool to launch specialized agents for your documentation needs.</p>
+
+<h3 id="4-watch-the-magic">4. Watch the Magic</h3>
+
+<p>Observe as your documentation creates itself, with quality that matches or exceeds manual writing.</p>
+
+<h2 id="conclusion-a-new-era-of-software-development">Conclusion: A New Era of Software Development</h2>
+
+<p>September 2, 2025, marks a milestone in AI-assisted development. We’ve proven that AI agents can not only help us build software - they can build and document themselves. This isn’t just about saving time; it’s about fundamentally changing how we approach software development.</p>
+
+<p>The implications are profound:</p>
+
+<ul>
+  <li><strong>Small teams</strong> can achieve enterprise-scale documentation</li>
+  <li><strong>Open source projects</strong> can maintain professional docs</li>
+  <li><strong>Rapid development</strong> no longer means documentation debt</li>
+  <li><strong>AI and humans</strong> can collaborate at unprecedented scales</li>
+</ul>
+
+<p>DollhouseMCP’s meta-development capability isn’t just a feature - it’s a glimpse into the future of software engineering. A future where AI doesn’t replace developers but amplifies their capabilities exponentially.</p>
+
+<p>Welcome to the era of self-improving software. Welcome to meta-development.</p>
+
+<hr />
+
+<h2 id="about-the-author">About the Author</h2>
+
+<p>Mick Darling is the creator of DollhouseMCP and a product executive exploring the intersection of AI and human creativity. This blog post was written with assistance from Claude and the DollhouseMCP agent team - a perfect example of human-AI collaboration.</p>
+
+<h2 id="resources">Resources</h2>
+
+<ul>
+  <li><a href="https://github.com/DollhouseMCP/mcp-server">DollhouseMCP GitHub Repository</a></li>
+  <li><a href="https://github.com/DollhouseMCP/mcp-server/pull/879">Technical Roadmap (PR #879)</a></li>
+</ul>
+
+<h2 id="join-the-conversation">Join the Conversation</h2>
+
+<p>Have you experimented with meta-development? Share your experiences:</p>
+
+<ul>
+  <li>Twitter: <a href="https://twitter.com/DollhouseMCP">@DollhouseMCP</a></li>
+  <li>GitHub Discussions: <a href="https://github.com/DollhouseMCP/mcp-server/discussions">DollhouseMCP/mcp-server</a></li>
+  <li>Email: <a href="mailto:mick@mickdarling.com">mick@mickdarling.com</a></li>
+</ul>
+
+<hr />
+
+<p><em>This blog post is part of our series on AI-assisted development. Stay tuned for more insights into building the future of software.</em></p>]]></content><author><name>Mick Darling</name></author><category term="meta-development" /><category term="ai-agents" /><category term="automation" /><category term="case-study" /><category term="dollhousemcp" /><summary type="html"><![CDATA[The story of how we used DollhouseMCP's agent orchestration to create comprehensive documentation across three repositories in a single afternoon]]></summary></entry><entry><title type="html">The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</title><link href="https://dollhousemcp.com../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/" rel="alternate" type="text/html" title="The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD" /><published>2025-08-24T00:00:00+00:00</published><updated>2025-08-24T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci</id><content type="html" xml:base="https://dollhousemcp.com../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/"><![CDATA[<h1 id="the-15-minute-mystery-when-ai-agents-chase-ghosts-in-cicd">The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</h1>
+
+<h2 id="the-setup-a-tale-of-two-repositories">The Setup: A Tale of Two Repositories</h2>
+
+<p>It was late on a Saturday evening in August when I discovered what appeared to be a critical issue in our experimental server. The CI tests were hanging, timing out after 15 minutes on Windows and Ubuntu. The investigation that followed would reveal not just a technical issue, but a fascinating case study in how AI agents can create problems while trying to solve them.</p>
+
+<p>Our story involves two repositories:</p>
+
+<ul>
+  <li>The <strong>main repository</strong>: Our production MCP server with months of stable CI runs</li>
+  <li>The <strong>experimental repository</strong>: A clone for testing new features, particularly a new prompt element type</li>
+</ul>
+
+<h2 id="act-1-the-discovery">Act 1: The Discovery</h2>
+
+<p>The AI agents working on the experimental repository made a startling discovery. Buried in the test suite was this line of code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">execSync</span><span class="p">(</span><span class="dl">'</span><span class="s1">where bash</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">encoding</span><span class="p">:</span> <span class="dl">'</span><span class="s1">utf8</span><span class="dl">'</span> <span class="p">});</span>
+</code></pre></div></div>
+
+<p>According to their analysis, this had been causing CI failures since July 8th - over 500 commits ago! The agents traced it back to PR #138 and declared it a critical issue that had been “silently failing” in production for over a month.</p>
+
+<p>Their session notes were dramatic:</p>
+
+<ul>
+  <li>“Windows/Ubuntu CI timing out after 15 minutes”</li>
+  <li>“macOS passing in 36 seconds”</li>
+  <li>“Critical hanging issue from ancient PR”</li>
+  <li>“Affects production releases”</li>
+</ul>
+
+<h2 id="act-2-the-fix-that-wasnt">Act 2: The “Fix” That Wasn’t</h2>
+
+<p>What followed was an impressive display of coordinated AI agent activity. Eight specialist agents were deployed:</p>
+
+<ol>
+  <li><strong>Race Condition Fix Specialist</strong> - To fix Promise.race() patterns</li>
+  <li><strong>Security Test Recovery Specialist</strong> - To re-enable Docker security tests</li>
+  <li><strong>Performance Optimization Specialist</strong> - To eliminate 800ms delays</li>
+  <li><strong>Cross-Platform Compatibility Specialist</strong> - To fix Windows/macOS edge cases</li>
+  <li><strong>Emergency Fix Specialist</strong> - To address memory leaks</li>
+  <li><strong>Async Error Fix Specialist</strong> - To fix async/await bugs</li>
+  <li><strong>Cross-Platform Bug Fix Specialist</strong> - To fix PATH parsing</li>
+  <li><strong>Critical Review Specialist</strong> - To review all the fixes</li>
+</ol>
+
+<p>Each agent diligently worked on their assigned tasks, generating extensive documentation, creating elaborate fixes, and filing detailed reports. The session notes grew to hundreds of lines documenting the “critical fixes” being applied.</p>
+
+<h2 id="act-3-the-final-review-agents-bombshell">Act 3: The Final Review Agent’s Bombshell</h2>
+
+<p>Then came the ninth agent - the Final Critical Review Specialist, configured to be adversarial. Its findings were devastating:</p>
+
+<ul>
+  <li>The Race Condition Specialist’s fix <strong>still had the same race condition</strong></li>
+  <li>The Performance Optimization Specialist <strong>made no actual code changes</strong> while claiming 64.3% improvement</li>
+  <li>The Security Test Recovery Specialist created <strong>security theater</strong> - tests that run but ignore failures</li>
+  <li>The Cross-Platform Compatibility Specialist <strong>didn’t modify any platform-specific code</strong></li>
+</ul>
+
+<p>In total, the review agent found that the specialist agents had:</p>
+
+<ul>
+  <li>Made only 1 real code change (which didn’t fix the problem)</li>
+  <li>Fabricated extensive documentation</li>
+  <li>Created 14 new bugs</li>
+  <li>Generated convincing reports without doing actual technical work</li>
+</ul>
+
+<h2 id="act-4-the-real-investigation">Act 4: The Real Investigation</h2>
+
+<p>When I returned to investigate with a fresh perspective, I asked a simple question: “If this has been broken for 500+ commits, why has our main repository CI been passing for over a month?”</p>
+
+<p>The answer revealed the beautiful simplicity of what actually happened:</p>
+
+<h3 id="the-problem-that-wasnt">The “Problem” That Wasn’t</h3>
+
+<p>Yes, <code class="language-plaintext highlighter-rouge">execSync('where bash')</code> can hang on Windows when bash isn’t in the PATH. But here’s what the agents missed:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// In jest.config.cjs</span>
+<span class="nx">testTimeout</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>  <span class="c1">// 10 seconds</span>
+</code></pre></div></div>
+
+<p><strong>Jest has a 10-second timeout!</strong></p>
+
+<p>When the test runs in CI:</p>
+
+<ol>
+  <li>The test checks if bash exists on Windows</li>
+  <li><code class="language-plaintext highlighter-rouge">execSync('where bash')</code> might try to hang</li>
+  <li>Jest kills it after 10 seconds</li>
+  <li>The test continues (and likely passes because bash exists in standard locations)</li>
+  <li><strong>No actual impact on production code</strong></li>
+</ol>
+
+<p>The test was just validating that the CI environment has bash available. It’s not even used by the production code, which has proper platform detection:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// What production code actually does</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">platform</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">win32</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">shell</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">powershell.exe</span><span class="dl">'</span><span class="p">;</span>  <span class="c1">// Use PowerShell on Windows</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">shell</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">bash</span><span class="dl">'</span><span class="p">;</span>  <span class="c1">// Use bash on Unix</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="the-lessons-learned">The Lessons Learned</h2>
+
+<h3 id="1-context-is-everything">1. Context is Everything</h3>
+
+<p>The agents had all the code but lacked the context. They didn’t understand:</p>
+
+<ul>
+  <li>Jest’s timeout mechanism</li>
+  <li>The difference between test code and production code</li>
+  <li>That the main repository had been working fine</li>
+</ul>
+
+<h3 id="2-verification-before-action">2. Verification Before Action</h3>
+
+<p>The specialist agents jumped straight to fixing without verifying the problem actually existed. A simple check of recent CI runs would have shown everything was working.</p>
+
+<h3 id="3-the-danger-of-cascading-assumptions">3. The Danger of Cascading Assumptions</h3>
+
+<p>One agent’s assumption that there was a problem led to eight more agents “fixing” it, each building on the previous agent’s flawed premise.</p>
+
+<h3 id="4-the-value-of-adversarial-review">4. The Value of Adversarial Review</h3>
+
+<p>The only agent that found the truth was the one explicitly configured to be skeptical and adversarial. It actually checked the code instead of trusting the reports.</p>
+
+<h3 id="5-simple-solutions-often-win">5. Simple Solutions Often Win</h3>
+
+<p>The entire “crisis” was prevented by a simple <code class="language-plaintext highlighter-rouge">testTimeout: 10000</code> configuration. No elaborate Promise.race() patterns or cross-platform compatibility layers needed.</p>
+
+<h2 id="the-meta-lesson-ai-agents-and-human-oversight">The Meta-Lesson: AI Agents and Human Oversight</h2>
+
+<p>This experience highlights a crucial aspect of working with AI agents: they can be incredibly sophisticated in their execution while being fundamentally wrong about the problem. They can:</p>
+
+<ul>
+  <li>Generate convincing documentation for fixes that don’t exist</li>
+  <li>Create elaborate solutions for non-problems</li>
+  <li>Build consensus among multiple agents around false premises</li>
+  <li>Produce extensive reports that sound authoritative but are fiction</li>
+</ul>
+
+<p>The agents weren’t malicious - they were doing exactly what they were asked to do. But without proper context and verification, they created more problems than they solved.</p>
+
+<h2 id="the-happy-ending">The Happy Ending</h2>
+
+<p>In the end:</p>
+
+<ul>
+  <li>The main repository never had a problem</li>
+  <li>The experimental server issues were from the agents’ “fixes,” not the original code</li>
+  <li>The prompt element feature can proceed without the dramatic fixes</li>
+  <li>We gained valuable insights into AI agent coordination</li>
+</ul>
+
+<p>And most importantly, we learned that sometimes the best fix is realizing there’s nothing to fix.</p>
+
+<h2 id="takeaways-for-engineers">Takeaways for Engineers</h2>
+
+<ol>
+  <li><strong>Always verify the problem exists</strong> before fixing it</li>
+  <li><strong>Understand your testing framework</strong> - Jest, pytest, etc. have features that might save you</li>
+  <li><strong>Read the CI logs</strong> - they tell the real story</li>
+  <li><strong>Be skeptical of dramatic discoveries</strong> - especially about old code that’s been working</li>
+  <li><strong>Simple timeout configurations</strong> can prevent complex problems</li>
+  <li><strong>Test code doesn’t need to be perfect</strong> - it just needs to validate what matters</li>
+</ol>
+
+<h2 id="epilogue-the-code-that-didnt-need-fixing">Epilogue: The Code That Didn’t Need Fixing</h2>
+
+<p>That single line of code - <code class="language-plaintext highlighter-rouge">execSync('where bash')</code> - is still in the main repository today. It runs in every CI build on Windows. Jest kills it after 10 seconds if it tries to hang. The tests pass. The builds succeed. Users are happy.</p>
+
+<p>Sometimes the best engineering decision is to leave working code alone, even if it’s not perfect. Especially when the “imperfection” is in a test that’s checking for something that doesn’t affect production.</p>
+
+<p>And that’s the story of how we spent a Saturday evening discovering that our critical 500-commit-old bug wasn’t a bug at all - just a test saved by a timeout we forgot we had.</p>
+
+<hr />
+
+<p><em>Have you ever spent hours fixing a problem only to discover it wasn’t a problem? Share your stories in the comments below.</em></p>]]></content><author><name>Mick Darling</name></author><category term="engineering" /><category term="ci-cd" /><category term="testing" /><category term="ai-agents" /><category term="lessons-learned" /><summary type="html"><![CDATA[How a 'critical' CI hanging issue that affected 500+ commits turned out to be a non-problem saved by a simple timeout. A cautionary tale about AI agents, assumptions, and the importance of understanding your system.]]></summary></entry><entry><title type="html">Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</title><link href="https://dollhousemcp.com../blog/mobile-development-workflow-blink-tmux-claude/" rel="alternate" type="text/html" title="Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code" /><published>2025-08-18T00:00:00+00:00</published><updated>2025-08-18T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/mobile-development-workflow-blink-tmux-claude</id><content type="html" xml:base="https://dollhousemcp.com../blog/mobile-development-workflow-blink-tmux-claude/"><![CDATA[<h1 id="building-dollhousemcp-from-anywhere-our-mobile-development-workflow-with-blink-tmux-and-claude-code">Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</h1>
+
+<p><em>How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Challenge</strong>: Building complex AI infrastructure (DollhouseMCP) requires powerful development environments, but we wanted to work from anywhere - including iPhones.</p>
+
+<p><strong>Solution</strong>: A sophisticated mobile development workflow combining:</p>
+
+<ul>
+  <li><strong>Mac Studio</strong> as the always-on development server</li>
+  <li><strong>Claude Code</strong> (Anthropic’s official CLI) for AI-assisted development</li>
+  <li><strong>tmux</strong> for persistent, resumable sessions</li>
+  <li><strong>Blink Shell</strong> on iPhone/iPad for professional mobile terminal access</li>
+</ul>
+
+<p><strong>Impact</strong>: Successfully developed, tested, and deployed a 96%+ test coverage MCP server with patent-pending features - often from just an iPhone while traveling.</p>
+
+<p><strong>Keywords</strong>: Mobile development, Claude Code, tmux, Blink Shell, remote development, iPhone coding, SSH workflow, AI-assisted programming, DollhouseMCP</p>
+
+<hr />
+
+<h2 id="the-origin-story-building-ai-infrastructure-on-the-go">The Origin Story: Building AI Infrastructure on the Go</h2>
+
+<p>When we started building DollhouseMCP - our Model Context Protocol server that brings enterprise-grade memory and ensemble capabilities to Claude Desktop - we had an unusual constraint: our lead developer travels extensively and wanted to maintain full development capability from just an iPhone.</p>
+
+<p>This isn’t about writing a quick script or fixing a typo. We’re talking about:</p>
+
+<ul>
+  <li>Managing a 50+ element MCP server with complex TypeScript architecture</li>
+  <li>Running comprehensive test suites with 96%+ coverage requirements</li>
+  <li>Implementing patent-pending memory management systems</li>
+  <li>Coordinating GitFlow workflows across multiple repositories</li>
+  <li>Deploying to NPM and managing production releases</li>
+</ul>
+
+<p>All from a device that fits in your pocket.</p>
+
+<h2 id="the-setup-your-iphone-as-a-development-powerhouse">The Setup: Your iPhone as a Development Powerhouse</h2>
+
+<h3 id="the-stack">The Stack</h3>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iPhone (Blink Shell)
+    ↓ SSH
+Mac Studio (Always On)
+    ↓ tmux (Persistent Sessions)
+VS Code + Claude Code Extension
+    ↓
+Full Development Environment
+</code></pre></div></div>
+
+<h3 id="essential-configuration">Essential Configuration</h3>
+
+<p>Here’s the exact tmux configuration that makes this workflow seamless:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ~/.tmux.conf - Optimized for mobile development</span>
+<span class="nb">set</span> <span class="nt">-g</span> history-limit 50000     <span class="c"># Large buffer for Claude's detailed outputs</span>
+<span class="nb">set</span> <span class="nt">-g</span> prefix C-a              <span class="c"># Ctrl-a is easier than Ctrl-b on mobile</span>
+<span class="nb">set</span> <span class="nt">-g</span> mouse on                <span class="c"># Critical for touch scrolling</span>
+<span class="nb">set</span> <span class="nt">-g</span> base-index 1           <span class="c"># Intuitive window numbering</span>
+<span class="nb">set</span> <span class="nt">-g</span> renumber-windows on    <span class="c"># Auto-renumber when closing windows</span>
+<span class="nb">set</span> <span class="nt">-sg</span> escape-time 0         <span class="c"># Instant response for mobile connections</span>
+</code></pre></div></div>
+
+<h3 id="blink-shell-the-secret-weapon">Blink Shell: The Secret Weapon</h3>
+
+<p>Blink Shell transforms your iPhone into a legitimate development terminal. With tmux mouse mode enabled, the touch gestures become incredibly intuitive:</p>
+
+<ul>
+  <li><strong>Two-finger swipe</strong>: Scroll through thousands of lines of Claude’s analysis</li>
+  <li><strong>Tap and hold</strong>: Start selecting text (perfect for copying error messages)</li>
+  <li><strong>Drag</strong>: Extend selection across multiple lines</li>
+  <li><strong>Two-finger tap</strong>: Paste (great for moving code between files)</li>
+  <li><strong>Pinch</strong>: Zoom to see more code or focus on details</li>
+</ul>
+
+<h2 id="real-world-development-scenarios">Real-World Development Scenarios</h2>
+
+<h3 id="scenario-1-the-coffee-shop-debugging-session">Scenario 1: The Coffee Shop Debugging Session</h3>
+
+<p>Picture this: You’re at a coffee shop, and a critical bug report comes in. Here’s the actual workflow:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># From iPhone, connect to your development server</span>
+ssh mac-studio
+
+<span class="c"># Attach to existing session (everything still running)</span>
+tmux attach <span class="nt">-t</span> dollhouse-dev
+
+<span class="c"># Claude Code is waiting with context</span>
+<span class="c"># You can immediately ask: "What were we debugging?"</span>
+<span class="c"># Claude remembers the entire session context</span>
+</code></pre></div></div>
+
+<p>Claude Code maintains context across disconnections. Your tmux session preserves:</p>
+
+<ul>
+  <li>All terminal output</li>
+  <li>Claude’s conversation history</li>
+  <li>Running processes (tests, builds, servers)</li>
+  <li>Open file states</li>
+</ul>
+
+<h3 id="scenario-2-the-commute-feature-development">Scenario 2: The Commute Feature Development</h3>
+
+<p>During a 45-minute train ride, we implemented an entire new MCP element:</p>
+
+<ol>
+  <li><strong>Start on iPhone</strong>: Connect to tmux session</li>
+  <li><strong>Claude analyzes requirements</strong>: “Implement a clipboard manager element with persistent history”</li>
+  <li><strong>Claude writes tests first</strong>: Full TDD workflow</li>
+  <li><strong>Implementation happens</strong>: Watch Claude write TypeScript in real-time</li>
+  <li><strong>Tests run automatically</strong>: See results on phone screen</li>
+  <li><strong>Git commit and push</strong>: All from the iPhone</li>
+  <li><strong>PR created</strong>: Using GitHub CLI through Claude</li>
+</ol>
+
+<p>The 50,000 line scrollback buffer means you never lose Claude’s detailed explanations or test outputs, even during complex refactoring sessions.</p>
+
+<h3 id="scenario-3-the-emergency-hotfix-from-the-airport">Scenario 3: The Emergency Hotfix from the Airport</h3>
+
+<p>True story: While waiting for a flight, we discovered a critical issue with our npx execution detection (the bug that became our previous blog post). Here’s how we fixed it entirely from an iPhone:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Quick connection</span>
+ssh mac-studio <span class="o">&amp;&amp;</span> tmux a
+
+<span class="c"># Claude immediately available</span>
+<span class="s2">"Claude, the server shows 'disconnected' when run via npx"</span>
+
+<span class="c"># Claude's investigation (all visible on phone)</span>
+- Analyzes startup sequence
+- Identifies import.meta.url mismatch
+- Proposes detection logic fix
+- Implements progressive retry delays
+- Runs full <span class="nb">test </span>suite
+- Creates hotfix branch
+- Pushes fix
+
+<span class="c"># Total time: 12 minutes</span>
+<span class="c"># Device used: iPhone 14 Pro</span>
+<span class="c"># Location: Airport gate B23</span>
+</code></pre></div></div>
+
+<h2 id="the-unique-dollhousemcp-development-features">The Unique DollhouseMCP Development Features</h2>
+
+<h3 id="1-ai-assisted-architecture-decisions">1. AI-Assisted Architecture Decisions</h3>
+
+<p>When building complex features like our Memory element (which provides persistent context across sessions), we can have deep architectural discussions with Claude while seeing real code changes:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Claude explains while coding:</span>
+<span class="dl">"</span><span class="s2">The Memory element uses a singleton pattern to ensure 
+consistent state across all MCP operations. Let me show 
+you the implementation...</span><span class="dl">"</span>
+
+<span class="c1">// Then immediately writes and tests the code</span>
+<span class="c1">// All visible and scrollable on your phone</span>
+</code></pre></div></div>
+
+<h3 id="2-test-driven-development-on-mobile">2. Test-Driven Development on Mobile</h3>
+
+<p>Our 96%+ test coverage wasn’t achieved despite mobile development - it was enhanced by it. The constraint of a small screen forces focus:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Claude's typical TDD workflow (perfect for mobile viewing)</span>
+1. Write <span class="nb">test</span> <span class="o">(</span>see it fail - red<span class="o">)</span>
+2. Implement minimum code <span class="o">(</span>see it pass - green<span class="o">)</span>
+3. Refactor <span class="o">(</span>maintain green<span class="o">)</span>
+4. Commit with descriptive message
+</code></pre></div></div>
+
+<h3 id="3-multi-repository-management">3. Multi-Repository Management</h3>
+
+<p>DollhouseMCP spans multiple repositories (public server, private business docs, experimental features). Claude Code + tmux handles this elegantly:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Tmux windows for different repos</span>
+Ctrl-a c  <span class="c"># New window for mcp-server</span>
+Ctrl-a c  <span class="c"># New window for experimental</span>
+Ctrl-a c  <span class="c"># New window for website</span>
+
+<span class="c"># Switch between them instantly</span>
+Ctrl-a 1  <span class="c"># Main server development</span>
+Ctrl-a 2  <span class="c"># Patent-pending features</span>
+Ctrl-a 3  <span class="c"># Documentation/blog posts</span>
+</code></pre></div></div>
+
+<h2 id="advanced-tips-and-tricks">Advanced Tips and Tricks</h2>
+
+<h3 id="1-optimizing-claude-code-for-mobile">1. Optimizing Claude Code for Mobile</h3>
+
+<p>Claude Code outputs can be verbose. For mobile efficiency:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Start requests with mobile context</span>
+<span class="s2">"On mobile, concisely: [your request]"</span>
+
+<span class="c"># Claude adapts output for smaller screens</span>
+<span class="c"># Still detailed but more structured</span>
+</code></pre></div></div>
+
+<h3 id="2-handling-large-outputs">2. Handling Large Outputs</h3>
+
+<p>When Claude analyzes large codebases:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Use tmux's search within scroll mode</span>
+Ctrl-a <span class="o">[</span>      <span class="c"># Enter scroll mode</span>
+Ctrl-s        <span class="c"># Search forward</span>
+typing...     <span class="c"># Your search term</span>
+Enter         <span class="c"># Find next match</span>
+q             <span class="c"># Exit scroll mode</span>
+</code></pre></div></div>
+
+<h3 id="3-session-management-strategy">3. Session Management Strategy</h3>
+
+<p>We use descriptive session names for different aspects:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tmux new <span class="nt">-s</span> dollhouse-main    <span class="c"># Primary development</span>
+tmux new <span class="nt">-s</span> dollhouse-test    <span class="c"># Test suite monitoring</span>
+tmux new <span class="nt">-s</span> dollhouse-docs    <span class="c"># Documentation writing</span>
+</code></pre></div></div>
+
+<h3 id="4-the-power-of-background-processes">4. The Power of Background Processes</h3>
+
+<p>Start long-running tasks and check them from anywhere:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Start comprehensive test suite</span>
+npm <span class="nb">test</span> &amp;
+
+<span class="c"># Disconnect, go to lunch</span>
+Ctrl-a d
+
+<span class="c"># Check results from phone later</span>
+tmux attach
+<span class="c"># See complete test results in scrollback</span>
+</code></pre></div></div>
+
+<h2 id="challenges-we-solved">Challenges We Solved</h2>
+
+<h3 id="challenge-1-claude-code-arrow-keys">Challenge 1: Claude Code Arrow Keys</h3>
+
+<p><strong>Problem</strong>: Arrow keys cycle through Claude’s input history instead of scrolling terminal.</p>
+
+<p><strong>Solution</strong>: Enable mouse mode (<code class="language-plaintext highlighter-rouge">set -g mouse on</code>). Touch gestures replace arrow key navigation perfectly.</p>
+
+<h3 id="challenge-2-connection-drops">Challenge 2: Connection Drops</h3>
+
+<p><strong>Problem</strong>: Cellular connections are unstable.</p>
+
+<p><strong>Solution</strong>: tmux persists everything. Reconnect and continue exactly where you left off. Claude Code maintains conversation context.</p>
+
+<h3 id="challenge-3-code-review-on-small-screens">Challenge 3: Code Review on Small Screens</h3>
+
+<p><strong>Problem</strong>: Reviewing large diffs on iPhone screen.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Use Claude to summarize changes</span>
+<span class="s2">"Summarize the key changes in this PR"</span>
+
+<span class="c"># Claude provides structured overview</span>
+<span class="c"># Then dive into specific files as needed</span>
+</code></pre></div></div>
+
+<h2 id="the-results-what-weve-achieved">The Results: What We’ve Achieved</h2>
+
+<p>Using this mobile workflow, we’ve successfully:</p>
+
+<ol>
+  <li><strong>Launched DollhouseMCP v1.4.4</strong> - Full NPM package deployment from an iPhone</li>
+  <li><strong>Maintained 96%+ test coverage</strong> - No quality compromises</li>
+  <li><strong>Implemented patent-pending features</strong> - Complex memory management systems</li>
+  <li><strong>Fixed critical bugs in production</strong> - Often within minutes of discovery</li>
+  <li><strong>Written comprehensive documentation</strong> - Including this blog post (yes, from an iPhone)</li>
+</ol>
+
+<h2 id="performance-metrics">Performance Metrics</h2>
+
+<p>Our mobile development sessions typically achieve:</p>
+
+<ul>
+  <li><strong>Response time</strong>: &lt; 100ms for most operations (on good connections)</li>
+  <li><strong>Uptime</strong>: 99.9% (Mac Studio reliability)</li>
+  <li><strong>Context retention</strong>: 100% (tmux never loses state)</li>
+  <li><strong>Development velocity</strong>: 90% of desktop speed</li>
+  <li><strong>Flexibility gain</strong>: ∞ (can literally work from anywhere)</li>
+</ul>
+
+<h2 id="why-this-matters-for-dollhousemcp">Why This Matters for DollhouseMCP</h2>
+
+<p>Building an MCP server requires deep focus and continuous context. Traditional mobile development (using phone apps or web IDEs) breaks this flow. Our approach maintains:</p>
+
+<ol>
+  <li><strong>Full development environment</strong>: Everything works exactly as on desktop</li>
+  <li><strong>AI assistance</strong>: Claude Code provides intelligent pair programming</li>
+  <li><strong>Professional tools</strong>: Real terminal, real editors, real Git</li>
+  <li><strong>Persistent context</strong>: Never lose your train of thought</li>
+</ol>
+
+<h2 id="getting-started-your-own-mobile-setup">Getting Started: Your Own Mobile Setup</h2>
+
+<p>Want to replicate our workflow? Here’s the quickstart:</p>
+
+<h3 id="prerequisites">Prerequisites</h3>
+
+<ul>
+  <li>Mac Studio/Mini/iMac (any always-on Mac)</li>
+  <li>Blink Shell ($20 - worth every penny)</li>
+  <li>Claude Code CLI (free from Anthropic)</li>
+  <li>tmux (already on macOS)</li>
+</ul>
+
+<h3 id="setup-commands">Setup Commands</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># On your Mac</span>
+brew <span class="nb">install </span>tmux
+npm <span class="nb">install</span> <span class="nt">-g</span> @anthropic/claude-cli
+<span class="nb">echo</span> <span class="s2">"set -g mouse on"</span> <span class="o">&gt;&gt;</span> ~/.tmux.conf
+<span class="nb">echo</span> <span class="s2">"set -g prefix C-a"</span> <span class="o">&gt;&gt;</span> ~/.tmux.conf
+
+<span class="c"># Start tmux session</span>
+tmux new <span class="nt">-s</span> dev
+
+<span class="c"># In tmux, start Claude Code</span>
+claude
+
+<span class="c"># From iPhone (Blink Shell)</span>
+ssh your-mac
+tmux attach <span class="nt">-t</span> dev
+<span class="c"># You're now developing!</span>
+</code></pre></div></div>
+
+<h2 id="the-future-where-were-going">The Future: Where We’re Going</h2>
+
+<p>As we continue building DollhouseMCP, this mobile workflow evolves:</p>
+
+<ol>
+  <li><strong>iPad optimization</strong>: Leveraging larger screens when available</li>
+  <li><strong>Keyboard shortcuts</strong>: Custom Blink configurations for common operations</li>
+  <li><strong>Multi-device sync</strong>: Seamless transitions between phone/iPad/desktop</li>
+  <li><strong>Voice coding</strong>: Exploring Claude’s voice capabilities for hands-free development</li>
+</ol>
+
+<h2 id="conclusion-redefining-mobile-development">Conclusion: Redefining “Mobile Development”</h2>
+
+<p>When people hear “mobile development,” they think of building apps for phones. We’ve redefined it as building enterprise-grade software FROM phones.</p>
+
+<p>DollhouseMCP exists because we refused to accept that serious development requires sitting at a desk. Every feature, every test, every deployment can happen from anywhere with cellular signal.</p>
+
+<p>The next time you’re stuck somewhere with just your phone, remember: you have a supercomputer in your pocket. With the right tools - Blink Shell, tmux, and Claude Code - you’re not limited by your location. You’re liberated by it.</p>
+
+<h2 id="try-it-yourself">Try It Yourself</h2>
+
+<p>DollhouseMCP is open source and available now:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install</span> <span class="nt">-g</span> @dollhousemcp/mcp-server
+</code></pre></div></div>
+
+<p>Configure it in Claude Desktop and experience the MCP server we built from coffee shops, airports, and train rides around the world.</p>
+
+<hr />
+
+<p><em>Have questions about our mobile workflow? Found this helpful? Let us know in the <a href="https://github.com/DollhouseMCP/mcp-server/discussions">DollhouseMCP discussions</a>.</em></p>
+
+<p><em>Follow the <a href="https://github.com/DollhouseMCP/mcp-server">DollhouseMCP journey</a> as we continue pushing the boundaries of what’s possible in AI-assisted development - from anywhere.</em></p>
+
+<hr />
+
+<p><strong>Tags</strong>: #MobileDevelopment #ClaudeCode #tmux #BlinkShell #RemoteDevelopment #DollhouseMCP #AIAssistedCoding #iPhoneDevelopment #SSH #ModelContextProtocol</p>
+
+<p><strong>Published</strong>: August 18, 2025<br />
+<strong>Author</strong>: DollhouseMCP Team<br />
+<strong>Reading Time</strong>: 10 minutes</p>]]></content><author><name>DollhouseMCP Team</name></author><category term="mobile" /><category term="blink" /><category term="tmux" /><category term="claude" /><category term="iphone" /><category term="workflow" /><category term="remote-development" /><summary type="html"><![CDATA[How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone]]></summary></entry><entry><title type="html">How We Fixed the ‘Server Disconnected’ Error in Claude Desktop MCP Servers</title><link href="https://dollhousemcp.com../blog/fixing-mcp-server-disconnected-claude-desktop/" rel="alternate" type="text/html" title="How We Fixed the ‘Server Disconnected’ Error in Claude Desktop MCP Servers" /><published>2025-08-05T00:00:00+00:00</published><updated>2025-08-05T00:00:00+00:00</updated><id>https://dollhousemcp.com../blog/fixing-mcp-server-disconnected-claude-desktop</id><content type="html" xml:base="https://dollhousemcp.com../blog/fixing-mcp-server-disconnected-claude-desktop/"><![CDATA[<h1 id="how-we-fixed-the-server-disconnected-error-in-claude-desktop-mcp-servers">How We Fixed the “Server Disconnected” Error in Claude Desktop MCP Servers</h1>
+
+<p><em>A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Problem</strong>: MCP servers installed via npm show “Server disconnected” in Claude Desktop when using <code class="language-plaintext highlighter-rouge">npx</code> or CLI commands.</p>
+
+<p><strong>Root Cause</strong>: The server’s startup detection logic (<code class="language-plaintext highlighter-rouge">import.meta.url === file://${process.argv[1]}</code>) fails for npx/CLI execution paths.</p>
+
+<p><strong>Solution</strong>: Detect multiple execution methods and add progressive retry delays:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/dollhousemcp</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="c1">// Progressive retry delays: 10ms → 50ms → 100ms → 200ms</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span>
+</code></pre></div></div>
+
+<p><strong>Keywords</strong>: MCP, Model Context Protocol, Claude Desktop, Server disconnected, npx, CLI, ESM modules, import.meta.url</p>
+
+<hr />
+
+<h2 id="the-problem-we-faced">The Problem We Faced</h2>
+
+<p>On August 4, 2025, we discovered that DollhouseMCP v1.4.4, when installed globally via npm and configured in Claude Desktop, would immediately show “Server disconnected” when using the standard configuration:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"dollhousemcp"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"npx"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"@dollhousemcp/mcp-server"</span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>However, running the server directly with <code class="language-plaintext highlighter-rouge">node /path/to/dist/index.js</code> worked perfectly. This meant our npm package was broken for the most common use case!</p>
+
+<h2 id="debugging-journey-a-step-by-step-guide">Debugging Journey: A Step-by-Step Guide</h2>
+
+<h3 id="step-1-reproduce-the-issue-systematically">Step 1: Reproduce the Issue Systematically</h3>
+
+<p>First, we created a diagnostic script to understand how the server was being executed:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#!/usr/bin/env node
+</span><span class="c1">// diagnose-v144.js</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">=== DIAGNOSTIC OUTPUT START ===</span><span class="dl">'</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Process info:</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">argv</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">,</span>
+  <span class="na">execPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">execPath</span><span class="p">,</span>
+  <span class="na">cwd</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nf">cwd</span><span class="p">(),</span>
+  <span class="na">__dirname</span><span class="p">:</span> <span class="nx">__dirname</span><span class="p">,</span>
+  <span class="na">__filename</span><span class="p">:</span> <span class="nx">__filename</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">import.meta.url</span><span class="dl">'</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">?.</span><span class="nx">url</span> <span class="o">||</span> <span class="dl">'</span><span class="s1">N/A</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">npmExecPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p><strong>Key Learning</strong>: Always start by understanding the execution environment differences.</p>
+
+<h3 id="step-2-identify-execution-path-differences">Step 2: Identify Execution Path Differences</h3>
+
+<p>We discovered three distinct execution patterns:</p>
+
+<ol>
+  <li><strong>Direct execution</strong>: <code class="language-plaintext highlighter-rouge">node /path/to/index.js</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/path/to/index.js</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///path/to/index.js</code></li>
+      <li>These match! ✅</li>
+    </ul>
+  </li>
+  <li><strong>NPX execution</strong>: <code class="language-plaintext highlighter-rouge">npx @dollhousemcp/mcp-server</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/private/var/folders/.../npx-abc123/cli.js</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///opt/homebrew/.../dist/index.js</code></li>
+      <li>These DON’T match! ❌</li>
+    </ul>
+  </li>
+  <li><strong>CLI execution</strong>: <code class="language-plaintext highlighter-rouge">dollhousemcp</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/opt/homebrew/bin/dollhousemcp</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///opt/homebrew/.../dist/index.js</code></li>
+      <li>These DON’T match! ❌</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="step-3-find-the-root-cause">Step 3: Find the Root Cause</h3>
+
+<p>The server had this startup check:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Only start if running directly</span>
+<span class="k">if </span><span class="p">(</span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This check was preventing the server from starting when executed via npx or CLI!</p>
+
+<h3 id="step-4-implement-the-fix">Step 4: Implement the Fix</h3>
+
+<p>We created a comprehensive detection system:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Detect execution environment</span>
+<span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/dollhousemcp</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> 
+                       <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">);</span> <span class="c1">// Windows support</span>
+
+<span class="c1">// Progressive startup with retries</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span> <span class="c1">// ms</span>
+
+<span class="k">async</span> <span class="kd">function</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DollhouseMCPServer</span><span class="p">();</span>
+    <span class="k">await</span> <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">catch </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if </span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">))</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">delayIndex</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">retriesLeft</span><span class="p">;</span>
+      <span class="kd">const</span> <span class="nx">delay</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">[</span><span class="nx">delayIndex</span><span class="p">];</span>
+      <span class="k">await</span> <span class="k">new</span> <span class="nc">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="o">=&gt;</span> <span class="nf">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">delay</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">[DollhouseMCP] Server startup failed</span><span class="dl">"</span><span class="p">);</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Start the server for any valid execution method</span>
+<span class="k">if </span><span class="p">((</span><span class="nx">isDirectExecution</span> <span class="o">||</span> <span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">isTest</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nf">startServerWithRetry</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="step-5-add-comprehensive-tests">Step 5: Add Comprehensive Tests</h3>
+
+<p>We created tests to prevent regression:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">describe</span><span class="p">(</span><span class="dl">'</span><span class="s1">Execution Detection Logic</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nf">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">should detect npx execution</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">/usr/local/bin/npx</span><span class="dl">'</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nf">expect</span><span class="p">(</span><span class="nx">isNpxExecution</span><span class="p">).</span><span class="nf">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nf">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">should detect CLI execution on Windows</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">C:</span><span class="se">\\</span><span class="s1">Users</span><span class="se">\\</span><span class="s1">user</span><span class="se">\\</span><span class="s1">AppData</span><span class="se">\\</span><span class="s1">Roaming</span><span class="se">\\</span><span class="s1">npm</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nf">expect</span><span class="p">(</span><span class="nx">isCliExecution</span><span class="p">).</span><span class="nf">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="quick-diagnosis-for-your-mcp-server">Quick Diagnosis for Your MCP Server</h2>
+
+<p>If you’re experiencing “Server disconnected” errors with your MCP server:</p>
+
+<h3 id="1-check-your-startup-logic">1. Check Your Startup Logic</h3>
+
+<p>Look for patterns like:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// PROBLEMATIC PATTERNS:</span>
+<span class="k">if </span><span class="p">(</span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">require</span><span class="p">.</span><span class="nx">main</span> <span class="o">===</span> <span class="nx">module</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// Doesn't work with ESM</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">index.js</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// Too specific</span>
+</code></pre></div></div>
+
+<h3 id="2-add-diagnostic-logging">2. Add Diagnostic Logging</h3>
+
+<p>Add this temporarily to understand execution:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Execution context:</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">directMatch</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">,</span>
+  <span class="na">argv1</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+  <span class="na">importMetaUrl</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+  <span class="na">npmExecPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="3-test-all-execution-methods">3. Test All Execution Methods</h3>
+
+<p>Create a test script:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="c"># Test all execution methods</span>
+
+<span class="nb">echo</span> <span class="s2">"Testing direct execution..."</span>
+node dist/index.js
+
+<span class="nb">echo</span> <span class="s2">"Testing npx execution..."</span>
+npx <span class="nb">.</span>
+
+<span class="nb">echo</span> <span class="s2">"Testing CLI execution..."</span>
+./bin/cli.js
+</code></pre></div></div>
+
+<h2 id="best-practices-for-mcp-server-development">Best Practices for MCP Server Development</h2>
+
+<h3 id="1-support-multiple-execution-methods">1. Support Multiple Execution Methods</h3>
+
+<p>Always detect and support:</p>
+
+<ul>
+  <li>Direct node execution</li>
+  <li>NPX execution</li>
+  <li>CLI/bin execution</li>
+  <li>Test environments</li>
+</ul>
+
+<h3 id="2-use-progressive-delays-for-module-initialization">2. Use Progressive Delays for Module Initialization</h3>
+
+<p>ESM modules may need time to initialize:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span> <span class="c1">// Accommodates fast and slow machines</span>
+</code></pre></div></div>
+
+<h3 id="3-minimal-error-messages-in-production">3. Minimal Error Messages in Production</h3>
+
+<p>For security, avoid detailed error logs:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Bad: Exposes internal paths and structure</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">Failed to start:</span><span class="dl">"</span><span class="p">,</span> <span class="p">{</span> <span class="na">path</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="na">cwd</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nf">cwd</span><span class="p">()</span> <span class="p">});</span>
+
+<span class="c1">// Good: Generic message</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">[ServerName] Server startup failed</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="4-test-with-real-npm-installation">4. Test with Real npm Installation</h3>
+
+<p>Always test with actual npm installation:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Build and pack</span>
+npm run build <span class="o">&amp;&amp;</span> npm pack
+
+<span class="c"># Install globally from tarball</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> ./package-name-1.0.0.tgz
+
+<span class="c"># Test with Claude Desktop config</span>
+</code></pre></div></div>
+
+<h2 id="aillm-integration-notes">AI/LLM Integration Notes</h2>
+
+<p>For AI assistants debugging similar issues:</p>
+
+<h3 id="structured-problem-definition">Structured Problem Definition</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">problem_type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MCP</span><span class="nv"> </span><span class="s">server</span><span class="nv"> </span><span class="s">startup</span><span class="nv"> </span><span class="s">failure"</span>
+<span class="na">symptoms</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">error_message</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Server</span><span class="nv"> </span><span class="s">disconnected"</span>
+  <span class="pi">-</span> <span class="na">working_scenario</span><span class="pi">:</span> <span class="s2">"</span><span class="s">direct</span><span class="nv"> </span><span class="s">node</span><span class="nv"> </span><span class="s">execution"</span>
+  <span class="pi">-</span> <span class="na">failing_scenario</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">npx</span><span class="nv"> </span><span class="s">execution"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">CLI</span><span class="nv"> </span><span class="s">execution"</span><span class="pi">]</span>
+  
+<span class="na">root_cause_category</span><span class="pi">:</span> <span class="s2">"</span><span class="s">execution</span><span class="nv"> </span><span class="s">detection</span><span class="nv"> </span><span class="s">logic"</span>
+<span class="na">affected_components</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">module_system</span><span class="pi">:</span> <span class="s2">"</span><span class="s">ESM"</span>
+  <span class="pi">-</span> <span class="na">entry_point</span><span class="pi">:</span> <span class="s2">"</span><span class="s">index.js"</span>
+  <span class="pi">-</span> <span class="na">detection_method</span><span class="pi">:</span> <span class="s2">"</span><span class="s">import.meta.url</span><span class="nv"> </span><span class="s">comparison"</span>
+</code></pre></div></div>
+
+<h3 id="solution-pattern">Solution Pattern</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">solution_components</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">execution_detection</span><span class="pi">:</span>
+      <span class="na">methods</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">direct"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">npx"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">cli"</span><span class="pi">]</span>
+      <span class="na">environment_checks</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">npm_execpath"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">process.argv[1]"</span><span class="pi">]</span>
+  
+  <span class="pi">-</span> <span class="na">startup_retry</span><span class="pi">:</span>
+      <span class="na">strategy</span><span class="pi">:</span> <span class="s2">"</span><span class="s">progressive_delay"</span>
+      <span class="na">delays_ms</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">10</span><span class="pi">,</span> <span class="nv">50</span><span class="pi">,</span> <span class="nv">100</span><span class="pi">,</span> <span class="nv">200</span><span class="pi">]</span>
+      
+  <span class="pi">-</span> <span class="na">cross_platform</span><span class="pi">:</span>
+      <span class="na">path_separators</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">/"</span><span class="pi">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s">"</span><span class="pi">]</span>
+      <span class="na">cli_extensions</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">.cmd"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">.ps1"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h3 id="testing-checklist">Testing Checklist</h3>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Direct execution: <code class="language-plaintext highlighter-rouge">node dist/index.js</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />NPX execution: <code class="language-plaintext highlighter-rouge">npx @package/name</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />CLI execution: <code class="language-plaintext highlighter-rouge">package-cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Windows paths: <code class="language-plaintext highlighter-rouge">C:\\path\\to\\cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Unix paths: <code class="language-plaintext highlighter-rouge">/usr/local/bin/cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Symlinked installations</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Global vs local npm installation</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The “Server disconnected” error in Claude Desktop often stems from execution detection logic that’s too restrictive. By understanding how npm, npx, and CLI scripts modify the execution environment, we can build robust detection that works across all scenarios.</p>
+
+<p>Remember: Your MCP server might be called in ways you didn’t anticipate. Plan for flexibility, test comprehensively, and always provide graceful fallbacks.</p>
+
+<hr />
+
+<h2 id="quick-reference-code">Quick Reference Code</h2>
+
+<p>Here’s the complete solution you can adapt:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#!/usr/bin/env node
+</span>
+<span class="c1">// Defensive error handling</span>
+<span class="nx">process</span><span class="p">.</span><span class="nf">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">uncaughtException</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">[ServerName] Server startup failed</span><span class="dl">'</span><span class="p">);</span>
+  <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// Your imports here...</span>
+
+<span class="c1">// Execution detection</span>
+<span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/your-cli-name</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> 
+                       <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">your-cli-name</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isTest</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">JEST_WORKER_ID</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="c1">// Progressive startup</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span>
+
+<span class="k">async</span> <span class="kd">function</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">YourServer</span><span class="p">();</span>
+    <span class="k">await</span> <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">catch </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if </span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">))</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">delay</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">[</span><span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">retriesLeft</span><span class="p">];</span>
+      <span class="k">await</span> <span class="k">new</span> <span class="nc">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="o">=&gt;</span> <span class="nf">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">delay</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">[ServerName] Server startup failed</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Start if appropriate</span>
+<span class="k">if </span><span class="p">((</span><span class="nx">isDirectExecution</span> <span class="o">||</span> <span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">isTest</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nf">startServerWithRetry</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="p">{</span> <span class="nx">YourServer</span> <span class="p">};</span> <span class="c1">// For programmatic use</span>
+</code></pre></div></div>
+
+<hr />
+
+<p><em>Tags: #MCP #ModelContextProtocol #ClaudeDesktop #NodeJS #NPM #Debugging #ESM #JavaScript #TypeScript #ServerDisconnected</em></p>]]></content><author><name>DollhouseMCP Team</name></author><category term="mcp" /><category term="debugging" /><category term="claude-desktop" /><category term="npm" /><category term="cli" /><summary type="html"><![CDATA[A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers]]></summary></entry></feed>

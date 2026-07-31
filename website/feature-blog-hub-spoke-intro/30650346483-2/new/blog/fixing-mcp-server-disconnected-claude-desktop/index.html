@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>How We Fixed the 'Server Disconnected' Error in Claude Desktop MCP Servers | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="How We Fixed the ‘Server Disconnected’ Error in Claude Desktop MCP Servers" />
+<meta name="author" content="DollhouseMCP Team" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers" />
+<meta property="og:description" content="A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers" />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/fixing-mcp-server-disconnected-claude-desktop/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/fixing-mcp-server-disconnected-claude-desktop/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-05T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="How We Fixed the ‘Server Disconnected’ Error in Claude Desktop MCP Servers" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@DollhouseMCP Team" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"DollhouseMCP Team"},"dateModified":"2025-08-05T00:00:00+00:00","datePublished":"2025-08-05T00:00:00+00:00","description":"A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers","headline":"How We Fixed the ‘Server Disconnected’ Error in Claude Desktop MCP Servers","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/fixing-mcp-server-disconnected-claude-desktop/"},"url":"https://dollhousemcp.com../../blog/fixing-mcp-server-disconnected-claude-desktop/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    August 05, 2025 • DollhouseMCP Team
+  </p>
+  <h1>How We Fixed the 'Server Disconnected' Error in Claude Desktop MCP Servers</h1>
+
+  
+  <p class="lead">A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">mcp</span>
+    
+    <span class="pill">debugging</span>
+    
+    <span class="pill">claude-desktop</span>
+    
+    <span class="pill">npm</span>
+    
+    <span class="pill">cli</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="how-we-fixed-the-server-disconnected-error-in-claude-desktop-mcp-servers">How We Fixed the “Server Disconnected” Error in Claude Desktop MCP Servers</h1>
+
+<p><em>A deep dive into debugging and fixing npx/CLI execution detection for Model Context Protocol servers</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Problem</strong>: MCP servers installed via npm show “Server disconnected” in Claude Desktop when using <code class="language-plaintext highlighter-rouge">npx</code> or CLI commands.</p>
+
+<p><strong>Root Cause</strong>: The server’s startup detection logic (<code class="language-plaintext highlighter-rouge">import.meta.url === file://${process.argv[1]}</code>) fails for npx/CLI execution paths.</p>
+
+<p><strong>Solution</strong>: Detect multiple execution methods and add progressive retry delays:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/dollhousemcp</span><span class="dl">'</span><span class="p">);</span>
+
+<span class="c1">// Progressive retry delays: 10ms → 50ms → 100ms → 200ms</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span>
+</code></pre></div></div>
+
+<p><strong>Keywords</strong>: MCP, Model Context Protocol, Claude Desktop, Server disconnected, npx, CLI, ESM modules, import.meta.url</p>
+
+<hr />
+
+<h2 id="the-problem-we-faced">The Problem We Faced</h2>
+
+<p>On August 4, 2025, we discovered that DollhouseMCP v1.4.4, when installed globally via npm and configured in Claude Desktop, would immediately show “Server disconnected” when using the standard configuration:</p>
+
+<div class="language-json highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span><span class="w">
+  </span><span class="nl">"mcpServers"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="nl">"dollhousemcp"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="nl">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"npx"</span><span class="p">,</span><span class="w">
+      </span><span class="nl">"args"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"@dollhousemcp/mcp-server"</span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<p>However, running the server directly with <code class="language-plaintext highlighter-rouge">node /path/to/dist/index.js</code> worked perfectly. This meant our npm package was broken for the most common use case!</p>
+
+<h2 id="debugging-journey-a-step-by-step-guide">Debugging Journey: A Step-by-Step Guide</h2>
+
+<h3 id="step-1-reproduce-the-issue-systematically">Step 1: Reproduce the Issue Systematically</h3>
+
+<p>First, we created a diagnostic script to understand how the server was being executed:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#!/usr/bin/env node
+</span><span class="c1">// diagnose-v144.js</span>
+
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">=== DIAGNOSTIC OUTPUT START ===</span><span class="dl">'</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Process info:</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">argv</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">,</span>
+  <span class="na">execPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">execPath</span><span class="p">,</span>
+  <span class="na">cwd</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nf">cwd</span><span class="p">(),</span>
+  <span class="na">__dirname</span><span class="p">:</span> <span class="nx">__dirname</span><span class="p">,</span>
+  <span class="na">__filename</span><span class="p">:</span> <span class="nx">__filename</span><span class="p">,</span>
+  <span class="dl">'</span><span class="s1">import.meta.url</span><span class="dl">'</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">?.</span><span class="nx">url</span> <span class="o">||</span> <span class="dl">'</span><span class="s1">N/A</span><span class="dl">'</span><span class="p">,</span>
+  <span class="na">npmExecPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<p><strong>Key Learning</strong>: Always start by understanding the execution environment differences.</p>
+
+<h3 id="step-2-identify-execution-path-differences">Step 2: Identify Execution Path Differences</h3>
+
+<p>We discovered three distinct execution patterns:</p>
+
+<ol>
+  <li><strong>Direct execution</strong>: <code class="language-plaintext highlighter-rouge">node /path/to/index.js</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/path/to/index.js</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///path/to/index.js</code></li>
+      <li>These match! ✅</li>
+    </ul>
+  </li>
+  <li><strong>NPX execution</strong>: <code class="language-plaintext highlighter-rouge">npx @dollhousemcp/mcp-server</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/private/var/folders/.../npx-abc123/cli.js</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///opt/homebrew/.../dist/index.js</code></li>
+      <li>These DON’T match! ❌</li>
+    </ul>
+  </li>
+  <li><strong>CLI execution</strong>: <code class="language-plaintext highlighter-rouge">dollhousemcp</code>
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">process.argv[1]</code> = <code class="language-plaintext highlighter-rouge">/opt/homebrew/bin/dollhousemcp</code></li>
+      <li><code class="language-plaintext highlighter-rouge">import.meta.url</code> = <code class="language-plaintext highlighter-rouge">file:///opt/homebrew/.../dist/index.js</code></li>
+      <li>These DON’T match! ❌</li>
+    </ul>
+  </li>
+</ol>
+
+<h3 id="step-3-find-the-root-cause">Step 3: Find the Root Cause</h3>
+
+<p>The server had this startup check:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Only start if running directly</span>
+<span class="k">if </span><span class="p">(</span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This check was preventing the server from starting when executed via npx or CLI!</p>
+
+<h3 id="step-4-implement-the-fix">Step 4: Implement the Fix</h3>
+
+<p>We created a comprehensive detection system:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Detect execution environment</span>
+<span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/dollhousemcp</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> 
+                       <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">);</span> <span class="c1">// Windows support</span>
+
+<span class="c1">// Progressive startup with retries</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span> <span class="c1">// ms</span>
+
+<span class="k">async</span> <span class="kd">function</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DollhouseMCPServer</span><span class="p">();</span>
+    <span class="k">await</span> <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">catch </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if </span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">))</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">delayIndex</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">retriesLeft</span><span class="p">;</span>
+      <span class="kd">const</span> <span class="nx">delay</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">[</span><span class="nx">delayIndex</span><span class="p">];</span>
+      <span class="k">await</span> <span class="k">new</span> <span class="nc">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="o">=&gt;</span> <span class="nf">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">delay</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">[DollhouseMCP] Server startup failed</span><span class="dl">"</span><span class="p">);</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Start the server for any valid execution method</span>
+<span class="k">if </span><span class="p">((</span><span class="nx">isDirectExecution</span> <span class="o">||</span> <span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">isTest</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nf">startServerWithRetry</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h3 id="step-5-add-comprehensive-tests">Step 5: Add Comprehensive Tests</h3>
+
+<p>We created tests to prevent regression:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">describe</span><span class="p">(</span><span class="dl">'</span><span class="s1">Execution Detection Logic</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nf">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">should detect npx execution</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">/usr/local/bin/npx</span><span class="dl">'</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nf">expect</span><span class="p">(</span><span class="nx">isNpxExecution</span><span class="p">).</span><span class="nf">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+  <span class="p">});</span>
+
+  <span class="nf">test</span><span class="p">(</span><span class="dl">'</span><span class="s1">should detect CLI execution on Windows</span><span class="dl">'</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">C:</span><span class="se">\\</span><span class="s1">Users</span><span class="se">\\</span><span class="s1">user</span><span class="se">\\</span><span class="s1">AppData</span><span class="se">\\</span><span class="s1">Roaming</span><span class="se">\\</span><span class="s1">npm</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">;</span>
+    <span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">dollhousemcp</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nf">expect</span><span class="p">(</span><span class="nx">isCliExecution</span><span class="p">).</span><span class="nf">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+  <span class="p">});</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h2 id="quick-diagnosis-for-your-mcp-server">Quick Diagnosis for Your MCP Server</h2>
+
+<p>If you’re experiencing “Server disconnected” errors with your MCP server:</p>
+
+<h3 id="1-check-your-startup-logic">1. Check Your Startup Logic</h3>
+
+<p>Look for patterns like:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// PROBLEMATIC PATTERNS:</span>
+<span class="k">if </span><span class="p">(</span><span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">require</span><span class="p">.</span><span class="nx">main</span> <span class="o">===</span> <span class="nx">module</span><span class="p">)</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// Doesn't work with ESM</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">index.js</span><span class="dl">'</span><span class="p">))</span> <span class="p">{</span> <span class="p">}</span> <span class="c1">// Too specific</span>
+</code></pre></div></div>
+
+<h3 id="2-add-diagnostic-logging">2. Add Diagnostic Logging</h3>
+
+<p>Add this temporarily to understand execution:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">Execution context:</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span>
+  <span class="na">directMatch</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">,</span>
+  <span class="na">argv1</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+  <span class="na">importMetaUrl</span><span class="p">:</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+  <span class="na">npmExecPath</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span>
+<span class="p">});</span>
+</code></pre></div></div>
+
+<h3 id="3-test-all-execution-methods">3. Test All Execution Methods</h3>
+
+<p>Create a test script:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/bash</span>
+<span class="c"># Test all execution methods</span>
+
+<span class="nb">echo</span> <span class="s2">"Testing direct execution..."</span>
+node dist/index.js
+
+<span class="nb">echo</span> <span class="s2">"Testing npx execution..."</span>
+npx <span class="nb">.</span>
+
+<span class="nb">echo</span> <span class="s2">"Testing CLI execution..."</span>
+./bin/cli.js
+</code></pre></div></div>
+
+<h2 id="best-practices-for-mcp-server-development">Best Practices for MCP Server Development</h2>
+
+<h3 id="1-support-multiple-execution-methods">1. Support Multiple Execution Methods</h3>
+
+<p>Always detect and support:</p>
+
+<ul>
+  <li>Direct node execution</li>
+  <li>NPX execution</li>
+  <li>CLI/bin execution</li>
+  <li>Test environments</li>
+</ul>
+
+<h3 id="2-use-progressive-delays-for-module-initialization">2. Use Progressive Delays for Module Initialization</h3>
+
+<p>ESM modules may need time to initialize:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span> <span class="c1">// Accommodates fast and slow machines</span>
+</code></pre></div></div>
+
+<h3 id="3-minimal-error-messages-in-production">3. Minimal Error Messages in Production</h3>
+
+<p>For security, avoid detailed error logs:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Bad: Exposes internal paths and structure</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">Failed to start:</span><span class="dl">"</span><span class="p">,</span> <span class="p">{</span> <span class="na">path</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="na">cwd</span><span class="p">:</span> <span class="nx">process</span><span class="p">.</span><span class="nf">cwd</span><span class="p">()</span> <span class="p">});</span>
+
+<span class="c1">// Good: Generic message</span>
+<span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">"</span><span class="s2">[ServerName] Server startup failed</span><span class="dl">"</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="4-test-with-real-npm-installation">4. Test with Real npm Installation</h3>
+
+<p>Always test with actual npm installation:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Build and pack</span>
+npm run build <span class="o">&amp;&amp;</span> npm pack
+
+<span class="c"># Install globally from tarball</span>
+npm <span class="nb">install</span> <span class="nt">-g</span> ./package-name-1.0.0.tgz
+
+<span class="c"># Test with Claude Desktop config</span>
+</code></pre></div></div>
+
+<h2 id="aillm-integration-notes">AI/LLM Integration Notes</h2>
+
+<p>For AI assistants debugging similar issues:</p>
+
+<h3 id="structured-problem-definition">Structured Problem Definition</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">problem_type</span><span class="pi">:</span> <span class="s2">"</span><span class="s">MCP</span><span class="nv"> </span><span class="s">server</span><span class="nv"> </span><span class="s">startup</span><span class="nv"> </span><span class="s">failure"</span>
+<span class="na">symptoms</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">error_message</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Server</span><span class="nv"> </span><span class="s">disconnected"</span>
+  <span class="pi">-</span> <span class="na">working_scenario</span><span class="pi">:</span> <span class="s2">"</span><span class="s">direct</span><span class="nv"> </span><span class="s">node</span><span class="nv"> </span><span class="s">execution"</span>
+  <span class="pi">-</span> <span class="na">failing_scenario</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">npx</span><span class="nv"> </span><span class="s">execution"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">CLI</span><span class="nv"> </span><span class="s">execution"</span><span class="pi">]</span>
+  
+<span class="na">root_cause_category</span><span class="pi">:</span> <span class="s2">"</span><span class="s">execution</span><span class="nv"> </span><span class="s">detection</span><span class="nv"> </span><span class="s">logic"</span>
+<span class="na">affected_components</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">module_system</span><span class="pi">:</span> <span class="s2">"</span><span class="s">ESM"</span>
+  <span class="pi">-</span> <span class="na">entry_point</span><span class="pi">:</span> <span class="s2">"</span><span class="s">index.js"</span>
+  <span class="pi">-</span> <span class="na">detection_method</span><span class="pi">:</span> <span class="s2">"</span><span class="s">import.meta.url</span><span class="nv"> </span><span class="s">comparison"</span>
+</code></pre></div></div>
+
+<h3 id="solution-pattern">Solution Pattern</h3>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">solution_components</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">execution_detection</span><span class="pi">:</span>
+      <span class="na">methods</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">direct"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">npx"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">cli"</span><span class="pi">]</span>
+      <span class="na">environment_checks</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">npm_execpath"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">process.argv[1]"</span><span class="pi">]</span>
+  
+  <span class="pi">-</span> <span class="na">startup_retry</span><span class="pi">:</span>
+      <span class="na">strategy</span><span class="pi">:</span> <span class="s2">"</span><span class="s">progressive_delay"</span>
+      <span class="na">delays_ms</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">10</span><span class="pi">,</span> <span class="nv">50</span><span class="pi">,</span> <span class="nv">100</span><span class="pi">,</span> <span class="nv">200</span><span class="pi">]</span>
+      
+  <span class="pi">-</span> <span class="na">cross_platform</span><span class="pi">:</span>
+      <span class="na">path_separators</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">/"</span><span class="pi">,</span> <span class="s2">"</span><span class="se">\\</span><span class="s">"</span><span class="pi">]</span>
+      <span class="na">cli_extensions</span><span class="pi">:</span> <span class="pi">[</span><span class="s2">"</span><span class="s">"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">.cmd"</span><span class="pi">,</span> <span class="s2">"</span><span class="s">.ps1"</span><span class="pi">]</span>
+</code></pre></div></div>
+
+<h3 id="testing-checklist">Testing Checklist</h3>
+
+<ul class="task-list">
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Direct execution: <code class="language-plaintext highlighter-rouge">node dist/index.js</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />NPX execution: <code class="language-plaintext highlighter-rouge">npx @package/name</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />CLI execution: <code class="language-plaintext highlighter-rouge">package-cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Windows paths: <code class="language-plaintext highlighter-rouge">C:\\path\\to\\cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Unix paths: <code class="language-plaintext highlighter-rouge">/usr/local/bin/cli</code></li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Symlinked installations</li>
+  <li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox" disabled="disabled" />Global vs local npm installation</li>
+</ul>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>The “Server disconnected” error in Claude Desktop often stems from execution detection logic that’s too restrictive. By understanding how npm, npx, and CLI scripts modify the execution environment, we can build robust detection that works across all scenarios.</p>
+
+<p>Remember: Your MCP server might be called in ways you didn’t anticipate. Plan for flexibility, test comprehensively, and always provide graceful fallbacks.</p>
+
+<hr />
+
+<h2 id="quick-reference-code">Quick Reference Code</h2>
+
+<p>Here’s the complete solution you can adapt:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#!/usr/bin/env node
+</span>
+<span class="c1">// Defensive error handling</span>
+<span class="nx">process</span><span class="p">.</span><span class="nf">on</span><span class="p">(</span><span class="dl">'</span><span class="s1">uncaughtException</span><span class="dl">'</span><span class="p">,</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">[ServerName] Server startup failed</span><span class="dl">'</span><span class="p">);</span>
+  <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="c1">// Your imports here...</span>
+
+<span class="c1">// Execution detection</span>
+<span class="kd">const</span> <span class="nx">isDirectExecution</span> <span class="o">=</span> <span class="k">import</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">url</span> <span class="o">===</span> <span class="s2">`file://</span><span class="p">${</span><span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]}</span><span class="s2">`</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isNpxExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">npm_execpath</span><span class="p">?.</span><span class="nf">includes</span><span class="p">(</span><span class="dl">'</span><span class="s1">npx</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isCliExecution</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="s1">/your-cli-name</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> 
+                       <span class="nx">process</span><span class="p">.</span><span class="nx">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]?.</span><span class="nf">endsWith</span><span class="p">(</span><span class="dl">'</span><span class="se">\\</span><span class="s1">your-cli-name</span><span class="dl">'</span><span class="p">)</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">isTest</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">JEST_WORKER_ID</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">test</span><span class="dl">'</span><span class="p">;</span>
+
+<span class="c1">// Progressive startup</span>
+<span class="kd">const</span> <span class="nx">STARTUP_DELAYS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">];</span>
+
+<span class="k">async</span> <span class="kd">function</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">try</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">server</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">YourServer</span><span class="p">();</span>
+    <span class="k">await</span> <span class="nx">server</span><span class="p">.</span><span class="nf">run</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">catch </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if </span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">))</span> <span class="p">{</span>
+      <span class="kd">const</span> <span class="nx">delay</span> <span class="o">=</span> <span class="nx">STARTUP_DELAYS</span><span class="p">[</span><span class="nx">STARTUP_DELAYS</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="nx">retriesLeft</span><span class="p">];</span>
+      <span class="k">await</span> <span class="k">new</span> <span class="nc">Promise</span><span class="p">(</span><span class="nx">resolve</span> <span class="o">=&gt;</span> <span class="nf">setTimeout</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">delay</span><span class="p">));</span>
+      <span class="k">return</span> <span class="nf">startServerWithRetry</span><span class="p">(</span><span class="nx">retriesLeft</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nf">error</span><span class="p">(</span><span class="dl">'</span><span class="s1">[ServerName] Server startup failed</span><span class="dl">'</span><span class="p">);</span>
+    <span class="nx">process</span><span class="p">.</span><span class="nf">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// Start if appropriate</span>
+<span class="k">if </span><span class="p">((</span><span class="nx">isDirectExecution</span> <span class="o">||</span> <span class="nx">isNpxExecution</span> <span class="o">||</span> <span class="nx">isCliExecution</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">isTest</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nf">startServerWithRetry</span><span class="p">();</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="p">{</span> <span class="nx">YourServer</span> <span class="p">};</span> <span class="c1">// For programmatic use</span>
+</code></pre></div></div>
+
+<hr />
+
+<p><em>Tags: #MCP #ModelContextProtocol #ClaudeDesktop #NodeJS #NPM #Debugging #ESM #JavaScript #TypeScript #ServerDisconnected</em></p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    
+    <a href="../../blog/mobile-development-workflow-blink-tmux-claude/">
+      <em>Next Post</em>
+      <strong>Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

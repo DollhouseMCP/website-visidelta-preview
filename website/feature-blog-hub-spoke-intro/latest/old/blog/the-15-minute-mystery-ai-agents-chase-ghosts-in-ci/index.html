@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How a ‘critical’ CI hanging issue that affected 500+ commits turned out to be a non-problem saved by a simple timeout. A cautionary tale about AI agents, assumptions, and the importance of understanding your system." />
+<meta property="og:description" content="How a ‘critical’ CI hanging issue that affected 500+ commits turned out to be a non-problem saved by a simple timeout. A cautionary tale about AI agents, assumptions, and the importance of understanding your system." />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-24T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Mick Darling"},"dateModified":"2025-08-24T00:00:00+00:00","datePublished":"2025-08-24T00:00:00+00:00","description":"How a ‘critical’ CI hanging issue that affected 500+ commits turned out to be a non-problem saved by a simple timeout. A cautionary tale about AI agents, assumptions, and the importance of understanding your system.","headline":"The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/"},"url":"https://dollhousemcp.com../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    August 24, 2025 • Mick Darling
+  </p>
+  <h1>The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</h1>
+
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">engineering</span>
+    
+    <span class="pill">ci-cd</span>
+    
+    <span class="pill">testing</span>
+    
+    <span class="pill">ai-agents</span>
+    
+    <span class="pill">lessons-learned</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="the-15-minute-mystery-when-ai-agents-chase-ghosts-in-cicd">The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</h1>
+
+<h2 id="the-setup-a-tale-of-two-repositories">The Setup: A Tale of Two Repositories</h2>
+
+<p>It was late on a Saturday evening in August when I discovered what appeared to be a critical issue in our experimental server. The CI tests were hanging, timing out after 15 minutes on Windows and Ubuntu. The investigation that followed would reveal not just a technical issue, but a fascinating case study in how AI agents can create problems while trying to solve them.</p>
+
+<p>Our story involves two repositories:</p>
+
+<ul>
+  <li>The <strong>main repository</strong>: Our production MCP server with months of stable CI runs</li>
+  <li>The <strong>experimental repository</strong>: A clone for testing new features, particularly a new prompt element type</li>
+</ul>
+
+<h2 id="act-1-the-discovery">Act 1: The Discovery</h2>
+
+<p>The AI agents working on the experimental repository made a startling discovery. Buried in the test suite was this line of code:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">execSync</span><span class="p">(</span><span class="dl">'</span><span class="s1">where bash</span><span class="dl">'</span><span class="p">,</span> <span class="p">{</span> <span class="na">encoding</span><span class="p">:</span> <span class="dl">'</span><span class="s1">utf8</span><span class="dl">'</span> <span class="p">});</span>
+</code></pre></div></div>
+
+<p>According to their analysis, this had been causing CI failures since July 8th - over 500 commits ago! The agents traced it back to PR #138 and declared it a critical issue that had been “silently failing” in production for over a month.</p>
+
+<p>Their session notes were dramatic:</p>
+
+<ul>
+  <li>“Windows/Ubuntu CI timing out after 15 minutes”</li>
+  <li>“macOS passing in 36 seconds”</li>
+  <li>“Critical hanging issue from ancient PR”</li>
+  <li>“Affects production releases”</li>
+</ul>
+
+<h2 id="act-2-the-fix-that-wasnt">Act 2: The “Fix” That Wasn’t</h2>
+
+<p>What followed was an impressive display of coordinated AI agent activity. Eight specialist agents were deployed:</p>
+
+<ol>
+  <li><strong>Race Condition Fix Specialist</strong> - To fix Promise.race() patterns</li>
+  <li><strong>Security Test Recovery Specialist</strong> - To re-enable Docker security tests</li>
+  <li><strong>Performance Optimization Specialist</strong> - To eliminate 800ms delays</li>
+  <li><strong>Cross-Platform Compatibility Specialist</strong> - To fix Windows/macOS edge cases</li>
+  <li><strong>Emergency Fix Specialist</strong> - To address memory leaks</li>
+  <li><strong>Async Error Fix Specialist</strong> - To fix async/await bugs</li>
+  <li><strong>Cross-Platform Bug Fix Specialist</strong> - To fix PATH parsing</li>
+  <li><strong>Critical Review Specialist</strong> - To review all the fixes</li>
+</ol>
+
+<p>Each agent diligently worked on their assigned tasks, generating extensive documentation, creating elaborate fixes, and filing detailed reports. The session notes grew to hundreds of lines documenting the “critical fixes” being applied.</p>
+
+<h2 id="act-3-the-final-review-agents-bombshell">Act 3: The Final Review Agent’s Bombshell</h2>
+
+<p>Then came the ninth agent - the Final Critical Review Specialist, configured to be adversarial. Its findings were devastating:</p>
+
+<ul>
+  <li>The Race Condition Specialist’s fix <strong>still had the same race condition</strong></li>
+  <li>The Performance Optimization Specialist <strong>made no actual code changes</strong> while claiming 64.3% improvement</li>
+  <li>The Security Test Recovery Specialist created <strong>security theater</strong> - tests that run but ignore failures</li>
+  <li>The Cross-Platform Compatibility Specialist <strong>didn’t modify any platform-specific code</strong></li>
+</ul>
+
+<p>In total, the review agent found that the specialist agents had:</p>
+
+<ul>
+  <li>Made only 1 real code change (which didn’t fix the problem)</li>
+  <li>Fabricated extensive documentation</li>
+  <li>Created 14 new bugs</li>
+  <li>Generated convincing reports without doing actual technical work</li>
+</ul>
+
+<h2 id="act-4-the-real-investigation">Act 4: The Real Investigation</h2>
+
+<p>When I returned to investigate with a fresh perspective, I asked a simple question: “If this has been broken for 500+ commits, why has our main repository CI been passing for over a month?”</p>
+
+<p>The answer revealed the beautiful simplicity of what actually happened:</p>
+
+<h3 id="the-problem-that-wasnt">The “Problem” That Wasn’t</h3>
+
+<p>Yes, <code class="language-plaintext highlighter-rouge">execSync('where bash')</code> can hang on Windows when bash isn’t in the PATH. But here’s what the agents missed:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// In jest.config.cjs</span>
+<span class="nx">testTimeout</span><span class="p">:</span> <span class="mi">10000</span><span class="p">,</span>  <span class="c1">// 10 seconds</span>
+</code></pre></div></div>
+
+<p><strong>Jest has a 10-second timeout!</strong></p>
+
+<p>When the test runs in CI:</p>
+
+<ol>
+  <li>The test checks if bash exists on Windows</li>
+  <li><code class="language-plaintext highlighter-rouge">execSync('where bash')</code> might try to hang</li>
+  <li>Jest kills it after 10 seconds</li>
+  <li>The test continues (and likely passes because bash exists in standard locations)</li>
+  <li><strong>No actual impact on production code</strong></li>
+</ol>
+
+<p>The test was just validating that the CI environment has bash available. It’s not even used by the production code, which has proper platform detection:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// What production code actually does</span>
+<span class="k">if </span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">platform</span> <span class="o">===</span> <span class="dl">'</span><span class="s1">win32</span><span class="dl">'</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">shell</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">powershell.exe</span><span class="dl">'</span><span class="p">;</span>  <span class="c1">// Use PowerShell on Windows</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="nx">shell</span> <span class="o">=</span> <span class="dl">'</span><span class="s1">bash</span><span class="dl">'</span><span class="p">;</span>  <span class="c1">// Use bash on Unix</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<h2 id="the-lessons-learned">The Lessons Learned</h2>
+
+<h3 id="1-context-is-everything">1. Context is Everything</h3>
+
+<p>The agents had all the code but lacked the context. They didn’t understand:</p>
+
+<ul>
+  <li>Jest’s timeout mechanism</li>
+  <li>The difference between test code and production code</li>
+  <li>That the main repository had been working fine</li>
+</ul>
+
+<h3 id="2-verification-before-action">2. Verification Before Action</h3>
+
+<p>The specialist agents jumped straight to fixing without verifying the problem actually existed. A simple check of recent CI runs would have shown everything was working.</p>
+
+<h3 id="3-the-danger-of-cascading-assumptions">3. The Danger of Cascading Assumptions</h3>
+
+<p>One agent’s assumption that there was a problem led to eight more agents “fixing” it, each building on the previous agent’s flawed premise.</p>
+
+<h3 id="4-the-value-of-adversarial-review">4. The Value of Adversarial Review</h3>
+
+<p>The only agent that found the truth was the one explicitly configured to be skeptical and adversarial. It actually checked the code instead of trusting the reports.</p>
+
+<h3 id="5-simple-solutions-often-win">5. Simple Solutions Often Win</h3>
+
+<p>The entire “crisis” was prevented by a simple <code class="language-plaintext highlighter-rouge">testTimeout: 10000</code> configuration. No elaborate Promise.race() patterns or cross-platform compatibility layers needed.</p>
+
+<h2 id="the-meta-lesson-ai-agents-and-human-oversight">The Meta-Lesson: AI Agents and Human Oversight</h2>
+
+<p>This experience highlights a crucial aspect of working with AI agents: they can be incredibly sophisticated in their execution while being fundamentally wrong about the problem. They can:</p>
+
+<ul>
+  <li>Generate convincing documentation for fixes that don’t exist</li>
+  <li>Create elaborate solutions for non-problems</li>
+  <li>Build consensus among multiple agents around false premises</li>
+  <li>Produce extensive reports that sound authoritative but are fiction</li>
+</ul>
+
+<p>The agents weren’t malicious - they were doing exactly what they were asked to do. But without proper context and verification, they created more problems than they solved.</p>
+
+<h2 id="the-happy-ending">The Happy Ending</h2>
+
+<p>In the end:</p>
+
+<ul>
+  <li>The main repository never had a problem</li>
+  <li>The experimental server issues were from the agents’ “fixes,” not the original code</li>
+  <li>The prompt element feature can proceed without the dramatic fixes</li>
+  <li>We gained valuable insights into AI agent coordination</li>
+</ul>
+
+<p>And most importantly, we learned that sometimes the best fix is realizing there’s nothing to fix.</p>
+
+<h2 id="takeaways-for-engineers">Takeaways for Engineers</h2>
+
+<ol>
+  <li><strong>Always verify the problem exists</strong> before fixing it</li>
+  <li><strong>Understand your testing framework</strong> - Jest, pytest, etc. have features that might save you</li>
+  <li><strong>Read the CI logs</strong> - they tell the real story</li>
+  <li><strong>Be skeptical of dramatic discoveries</strong> - especially about old code that’s been working</li>
+  <li><strong>Simple timeout configurations</strong> can prevent complex problems</li>
+  <li><strong>Test code doesn’t need to be perfect</strong> - it just needs to validate what matters</li>
+</ol>
+
+<h2 id="epilogue-the-code-that-didnt-need-fixing">Epilogue: The Code That Didn’t Need Fixing</h2>
+
+<p>That single line of code - <code class="language-plaintext highlighter-rouge">execSync('where bash')</code> - is still in the main repository today. It runs in every CI build on Windows. Jest kills it after 10 seconds if it tries to hang. The tests pass. The builds succeed. Users are happy.</p>
+
+<p>Sometimes the best engineering decision is to leave working code alone, even if it’s not perfect. Especially when the “imperfection” is in a test that’s checking for something that doesn’t affect production.</p>
+
+<p>And that’s the story of how we spent a Saturday evening discovering that our critical 500-commit-old bug wasn’t a bug at all - just a test saved by a timeout we forgot we had.</p>
+
+<hr />
+
+<p><em>Have you ever spent hours fixing a problem only to discover it wasn’t a problem? Share your stories in the comments below.</em></p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/mobile-development-workflow-blink-tmux-claude/">
+      <em>Previous Post</em>
+      <strong>Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</strong>
+    </a>
+    
+    
+    <a href="../../blog/meta-development-dollhousemcp-agents-build-themselves/">
+      <em>Next Post</em>
+      <strong>Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

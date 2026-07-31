@@ -1,0 +1,1 @@
+- **Blog hub publishing rule** — this blog is a spoke of the Dollhouse Research blog hub. Every new post added to `_blog_posts/` must also add one entry to `_data/blog_hub.yml` in `DollhouseMCP/DollhouseResearch-website` (title, date, summary, `project: DollhouseMCP`, absolute URL) in the same working session. See that repo's README for the format.

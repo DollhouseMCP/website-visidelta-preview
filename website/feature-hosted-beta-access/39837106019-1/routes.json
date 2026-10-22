@@ -1,0 +1,67 @@
+[
+  {
+    "id": "fd9809a8281e",
+    "file": "index.html",
+    "route": "/"
+  },
+  {
+    "id": "d05cf2dc9271",
+    "file": "about.html",
+    "route": "/about.html"
+  },
+  {
+    "id": "4a5e0fcb0d59",
+    "file": "beta.html",
+    "route": "/beta.html"
+  },
+  {
+    "id": "63da69b1453f",
+    "file": "blog/index.html",
+    "route": "/blog"
+  },
+  {
+    "id": "707dbcbf4e7e",
+    "file": "_blog_posts/dollhousemcp-console-tour.md",
+    "route": "/blog/dollhousemcp-console-tour"
+  },
+  {
+    "id": "b5301022419f",
+    "file": "_blog_posts/fixing-mcp-server-disconnected-claude-desktop.md",
+    "route": "/blog/fixing-mcp-server-disconnected-claude-desktop"
+  },
+  {
+    "id": "febedad18e61",
+    "file": "blog/launch-announcement.html",
+    "route": "/blog/launch-announcement.html"
+  },
+  {
+    "id": "72aefb88d376",
+    "file": "_blog_posts/meta-development-dollhousemcp-agents-build-themselves.md",
+    "route": "/blog/meta-development-dollhousemcp-agents-build-themselves"
+  },
+  {
+    "id": "94d10ac8a9b5",
+    "file": "_blog_posts/mobile-development-workflow-blink-tmux-claude.md",
+    "route": "/blog/mobile-development-workflow-blink-tmux-claude"
+  },
+  {
+    "id": "9e0a932b1581",
+    "file": "_blog_posts/story-behind-dollhousemcp.md",
+    "route": "/blog/story-behind-dollhousemcp"
+  },
+  {
+    "id": "3d0074f768ec",
+    "file": "_blog_posts/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci.md",
+    "route": "/blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci"
+  },
+  {
+    "id": "c2e6678e42fe",
+    "file": "_blog_posts/the-security-model-behind-dollhousemcp.md",
+    "route": "/blog/the-security-model-behind-dollhousemcp"
+  },
+  {
+    "id": "850aca356465",
+    "file": "licensing.html",
+    "route": "/licensing.html"
+  }
+]

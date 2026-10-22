@@ -5,16 +5,6 @@
     "route": "/"
   },
   {
-    "id": "p001",
-    "file": "_beta/README.md",
-    "route": "/_beta/README/"
-  },
-  {
-    "id": "470114dd1ee0",
-    "file": "_includes/header.html",
-    "route": "/_includes/header.html"
-  },
-  {
     "id": "d05cf2dc9271",
     "file": "about.html",
     "route": "/about.html"

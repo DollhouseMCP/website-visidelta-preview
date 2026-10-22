@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DollhouseMCP 2.0 | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="DollhouseMCP 2.0" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Open-source AI customization through modular building blocks, local portfolio workflows, MCP-AQL, and safety-aware agent execution." />
+<meta property="og:description" content="Open-source AI customization through modular building blocks, local portfolio workflows, MCP-AQL, and safety-aware agent execution." />
+<link rel="canonical" href="https://dollhousemcp.com" />
+<meta property="og:url" content="https://dollhousemcp.com" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="DollhouseMCP 2.0" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","author":{"@type":"Person","name":"Mick Darling"},"description":"Open-source AI customization through modular building blocks, local portfolio workflows, MCP-AQL, and safety-aware agent execution.","headline":"DollhouseMCP 2.0","name":"DollhouseMCP","sameAs":["https://github.com/DollhouseMCP","https://www.npmjs.com/package/@dollhousemcp/mcp-server"],"url":"https://dollhousemcp.com"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="blog/feed.xml" />
+    <link rel="stylesheet" href="assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="">
+    <img class="brand-logo" src="assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="">Home</a>
+    <a href="blog/">Blog</a>
+    <a href="security/">Security</a>
+    <a href="about.html">About</a>
+    <a href="licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      <section class="atelier-hero">
+  <div class="hero-grid">
+    <div class="reveal">
+      <span class="hero-kicker">DollhouseMCP 2.0</span>
+      <h1>Building blocks for AI customization.</h1>
+      <p class="lead">
+        DollhouseMCP turns prompts into modular building blocks you can create, activate, combine, version, and share:
+        personas, skills, templates, agents, memories, and ensembles.
+      </p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://github.com/DollhouseMCP/mcp-server">Get Started on GitHub</a>
+        <a class="button button-secondary" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">Install from NPM</a>
+        <a class="button button-secondary" href="https://collection.dollhousemcp.com/">Browse Collection</a>
+        <a class="button button-secondary" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+        <a class="button button-secondary" href="blog/">Read Blog</a>
+      </div>
+      <p class="section-subtle">
+        DollhouseMCP is part of <a href="https://dollhouseresearch.com/">Dollhouse Research</a>, the broader platform
+        for user-owned AI customization and control.
+      </p>
+    </div>
+
+    <aside class="panel panel-primary reveal">
+      <div class="panel-head">At a Glance</div>
+      <div class="panel-body">
+        <ul class="metric-list">
+          <li><strong>Package</strong><span><code>@dollhousemcp/mcp-server</code></span></li>
+          <li><strong>Starter content</strong><span>38 bundled elements</span></li>
+          <li><strong>Runtime</strong><span>MCP-AQL + Gatekeeper + agent loop</span></li>
+          <li><strong>Software license</strong><span>AGPL-3.0-or-later</span></li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="motif-band motif-band-install">
+  <div class="section-wrap">
+    <div class="motif-strip reveal" aria-hidden="true">
+      <span class="motif-tile motif-a"></span>
+      <span class="motif-tile motif-b"></span>
+      <span class="motif-tile motif-c"></span>
+      <span class="motif-tile motif-d"></span>
+      <span class="motif-tile motif-e"></span>
+      <span class="motif-tile motif-f"></span>
+    </div>
+    <div class="install-band reveal">
+      <div class="install-band-copy">
+        <p class="eyebrow">Quick Install</p>
+        <h2>One command. Guided install for popular MCP clients.</h2>
+        <p>
+          Copy this command, paste it into a terminal, and run it. DollhouseMCP opens a local web flow that walks you
+          through setup for Claude Desktop, Claude Code, Cursor, VS Code, Codex, Gemini CLI, and other popular MCP clients.
+        </p>
+      </div>
+      <div class="install-band-code">
+        <section class="install-option">
+          <h3>Launch the guided installer</h3>
+          <p>
+            Copy this into a terminal and run it to start the local web installer for the major AI MCP clients.
+          </p>
+          <div class="install-code-block">
+            <button
+              class="copy-button copy-button-code"
+              type="button"
+              data-copy-text="npx @dollhousemcp/mcp-server@latest --web"
+              aria-label="Copy guided installer command"
+              title="Copy guided installer command"
+            ><span class="sr-only">Copy guided installer command</span></button>
+            <pre><code>npx @dollhousemcp/mcp-server@latest --web</code></pre>
+          </div>
+          <p class="install-hint">
+            The guided flow opens a local web server and helps install DollhouseMCP into the most popular MCP clients.
+          </p>
+          <p class="install-more">
+            Prefer to configure things yourself? See the
+            <a href="https://github.com/DollhouseMCP/mcp-server/blob/main/docs/guides/quick-start.md">full setup guide</a>.
+          </p>
+        </section>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="showcase showcase-slab">
+  <div class="section-wrap">
+    <h2 class="section-heading reveal">What Ships With DollhouseMCP</h2>
+    <p class="section-subtle reveal">
+      The 2.0 platform is more than personas. It ships a complete element model, a local portfolio, a public collection,
+      MCP-AQL for structured operations, and a safety-aware execution layer for real agent workflows.
+    </p>
+
+    <div class="card-grid card-grid-featured card-grid-ships">
+      <article class="card card-core card-featured reveal" data-card-link="building-blocks.html">
+        <span class="pill">Elements</span>
+        <div class="card-family card-family-core" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>Six reusable element types</h3>
+        <p>Personas, skills, templates, agents, memories, and ensembles are modular building blocks for AI customization across behavior, capabilities, structure, execution, context, and coordinated stacks.</p>
+      </article>
+
+      <article class="card card-core reveal" data-card-link="starter-elements.html">
+        <span class="pill">Portfolio</span>
+        <div class="card-family card-family-core" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>38 bundled starter elements</h3>
+        <p>The server ships with starter personas, skills, templates, agents, memories, and ensembles, including the Dollhouse expert suite and a session monitor agent.</p>
+      </article>
+
+      <article class="card card-protocol reveal" data-card-link="mcp-aql.html">
+        <span class="pill">MCP-AQL</span>
+        <div class="card-family card-family-protocol" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>CRUDE semantic endpoints</h3>
+        <p>MCP-AQL groups operations into Create, Read, Update, Delete, and Execute, with introspection built in so an LLM can discover what the server supports at runtime.</p>
+      </article>
+
+      <article class="card card-tooling reveal" data-card-link="dynamic-permissioning.html">
+        <span class="pill">Permissioning</span>
+        <div class="card-family card-family-tooling" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>Dynamic permissioning through active elements</h3>
+        <p>Personas, skills, and ensembles can act as security principals, changing what the AI can do, what needs approval, and what gets denied outright.</p>
+      </article>
+
+      <article class="card card-core reveal" data-card-link="portfolio-workflows.html">
+        <span class="pill">Portfolio</span>
+        <div class="card-family card-family-core" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>Local portfolio with GitHub sync</h3>
+        <p>Your elements live in a readable local portfolio that works offline, can sync to GitHub, and can submit community-ready content back into the collection.</p>
+      </article>
+
+      <article class="card card-protocol reveal" data-card-link="platform-operations.html">
+        <span class="pill">Operations</span>
+        <div class="card-family card-family-protocol" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>Full platform operations, not just activation</h3>
+        <p>2.0 includes collection install and submission, portfolio sync, browser opening, enhanced search, skill conversion, execution lifecycle control, and handoff/resume flows.</p>
+      </article>
+
+      <article class="card card-tooling reveal" data-card-link="agent-runtime.html">
+        <span class="pill">Security</span>
+        <div class="card-family card-family-tooling" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>Autonomy evaluator and danger zone enforcement</h3>
+        <p>Agents receive continue, pause, or escalate guidance every step, while high-risk operations like destructive commands and external calls can be hard-blocked.</p>
+      </article>
+
+      <article class="card card-core reveal" data-card-link="licensing.html">
+        <span class="pill">Licensing</span>
+        <div class="card-family card-family-core" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        <h3>AGPL core, commercial licensing available</h3>
+        <p>The software is open source under AGPL-3.0-or-later, with commercial licensing available for teams that need proprietary, hosted, or enterprise procurement terms.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="prose">
+  <h2 class="reveal">How the platform works</h2>
+  <p class="reveal">
+    Create or edit a Dollhouse element in natural language. Store it in your local portfolio. Activate it when you need
+    it. Combine it with other elements in ensembles. Install community-built elements from the Collection when you want
+    a faster starting point.
+  </p>
+
+  <div class="workflow-grid reveal">
+    <div class="workflow-step">
+      <span class="workflow-step-label">1</span>
+      <h3>Create, edit, or import</h3>
+      <p>Build elements from chat, install them from the Collection, or convert compatible skills into first-class Dollhouse elements.</p>
+    </div>
+    <div class="workflow-step">
+      <span class="workflow-step-label">2</span>
+      <h3>Keep them in your portfolio</h3>
+      <p>The portfolio lives locally, works offline, and can be backed up or synced to GitHub without giving up file-level ownership.</p>
+    </div>
+    <div class="workflow-step">
+      <span class="workflow-step-label">3</span>
+      <h3>Activate stacks, not one-off prompts</h3>
+      <p>Mix personas, skills, templates, memories, and ensembles so your AI has reusable behavior instead of re-explaining preferences every session.</p>
+    </div>
+    <div class="workflow-step">
+      <span class="workflow-step-label">4</span>
+      <h3>Run agents inside a controlled loop</h3>
+      <p>Execution flows back through Gatekeeper, autonomy evaluation, and danger-zone checks so higher agency does not mean less control.</p>
+    </div>
+  </div>
+
+  <div class="focus-grid reveal">
+    <div class="focus-panel">
+      <h2>Element model</h2>
+      <p>Personas shape behavior, skills add capabilities, templates structure outputs, agents pursue goals, memories persist context, and ensembles package multiple elements together.</p>
+    </div>
+    <div class="focus-panel">
+      <h2>Local portfolio</h2>
+      <p>DollhouseMCP works from a local portfolio, so the things you build stay readable, portable, and under your control before you ever connect GitHub or share publicly.</p>
+    </div>
+    <div class="focus-panel">
+      <h2>Collection and sharing</h2>
+      <p>The Dollhouse Collection is the public browse-and-install path for community elements, with install and submission flows built into the platform instead of bolted on later.</p>
+    </div>
+    <div class="focus-panel">
+      <h2>Agent execution</h2>
+      <p>Runtime execution stays inside an approval-aware loop with server-side checks, step recording, and a clear path for human input when autonomy should pause.</p>
+    </div>
+  </div>
+
+  <h2 class="reveal">Why 2.0 matters</h2>
+  <ul class="timeline reveal">
+    <li>
+      <strong>MCP-AQL</strong>
+      <p>Five semantic endpoints reduce tool sprawl, improve discoverability, and let the server describe itself at runtime through introspection.</p>
+    </li>
+    <li>
+      <strong>Gatekeeper</strong>
+      <p>Permissions are enforced server-side, so active Dollhouse elements can shape what the AI can do, not just how it sounds.</p>
+    </li>
+    <li>
+      <strong>Portfolio and GitHub workflows</strong>
+      <p>Elements stay local-first with backup, sync, portfolio browser, and collection workflows instead of disappearing into one-off chat history.</p>
+    </li>
+    <li>
+      <strong>Composable execution</strong>
+      <p>Agents, memories, and ensembles turn isolated prompts into reusable workflows that can be inspected, refined, handed off, resumed, and run again.</p>
+    </li>
+    <li>
+      <strong>Licensing clarity</strong>
+      <p>The open-source core stays under AGPL-3.0-or-later, while commercial licensing is available for proprietary or hosted deployment models.</p>
+    </li>
+  </ul>
+
+  <div class="callout reveal">
+    <p>
+      Start with the <a href="https://github.com/DollhouseMCP/mcp-server">GitHub repository</a> or the
+      <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM package</a>, then explore
+      <a href="https://collection.dollhousemcp.com/">the Collection</a> for reusable elements and
+      <a href="blog/">the blog</a> for deeper technical context.
+    </p>
+  </div>
+</section>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="blog/">Blog</a>
+    <a href="about.html">About</a>
+    <a href="licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="assets/js/site.js" defer></script>
+    
+  </body>
+</html>

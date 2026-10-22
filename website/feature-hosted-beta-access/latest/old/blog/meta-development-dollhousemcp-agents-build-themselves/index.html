@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meta-Development: How DollhouseMCP Agents Built Their Own Documentation | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Meta-Development: How DollhouseMCP Agents Built Their Own Documentation" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="The story of how we used DollhouseMCP’s agent orchestration to create comprehensive documentation across three repositories in a single afternoon" />
+<meta property="og:description" content="The story of how we used DollhouseMCP’s agent orchestration to create comprehensive documentation across three repositories in a single afternoon" />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/meta-development-dollhousemcp-agents-build-themselves/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/meta-development-dollhousemcp-agents-build-themselves/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-09-02T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Meta-Development: How DollhouseMCP Agents Built Their Own Documentation" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Mick Darling"},"dateModified":"2025-09-02T00:00:00+00:00","datePublished":"2025-09-02T00:00:00+00:00","description":"The story of how we used DollhouseMCP’s agent orchestration to create comprehensive documentation across three repositories in a single afternoon","headline":"Meta-Development: How DollhouseMCP Agents Built Their Own Documentation","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/meta-development-dollhousemcp-agents-build-themselves/"},"url":"https://dollhousemcp.com../../blog/meta-development-dollhousemcp-agents-build-themselves/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    September 02, 2025 • Mick Darling
+  </p>
+  <h1>Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</h1>
+
+  
+  <p class="lead">The story of how we used DollhouseMCP's agent orchestration to create comprehensive documentation across three repositories in a single afternoon</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">meta-development</span>
+    
+    <span class="pill">ai-agents</span>
+    
+    <span class="pill">automation</span>
+    
+    <span class="pill">case-study</span>
+    
+    <span class="pill">dollhousemcp</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="meta-development-how-dollhousemcp-agents-built-their-own-documentation">Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</h1>
+
+<p><em>On September 2, 2025, we achieved something remarkable: DollhouseMCP agents successfully documented themselves, creating over 3,000 lines of strategic documentation across three repositories in just four hours.</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Achievement</strong>: Used DollhouseMCP’s own agent orchestration system to create comprehensive technical and business documentation for DollhouseMCP itself.</p>
+
+<p><strong>Results</strong>:</p>
+
+<ul>
+  <li>8+ strategic documents across 3 repositories</li>
+  <li>3,000+ lines of high-quality documentation</li>
+  <li>85-90% time reduction vs. manual creation</li>
+  <li>Zero human intervention after initial prompting</li>
+</ul>
+
+<p><strong>Key Innovation</strong>: Specialized agents working through Alex Sterling persona orchestrator, preserving context while delegating complex tasks.</p>
+
+<p><strong>Business Impact</strong>: Proof that AI agents can build and document themselves, opening new possibilities for self-improving software systems.</p>
+
+<hr />
+
+<h2 id="the-challenge-documentation-at-scale">The Challenge: Documentation at Scale</h2>
+
+<p>Every software project faces the same challenge: keeping documentation current with rapid development. For DollhouseMCP, an AI agent orchestration platform, we faced an ironic situation - we had powerful tools for automation but were still writing documentation manually.</p>
+
+<p>The requirements were substantial:</p>
+
+<ul>
+  <li>Technical roadmap for the next 6 months</li>
+  <li>Plugin development guide for community contributors</li>
+  <li>Workflow element implementation plan</li>
+  <li>Business strategy documentation</li>
+  <li>IP protection framework</li>
+  <li>Website evolution plan</li>
+</ul>
+
+<p>Traditionally, this would take weeks of focused writing. We decided to see if DollhouseMCP could document itself.</p>
+
+<h2 id="the-approach-agent-orchestration">The Approach: Agent Orchestration</h2>
+
+<p>Instead of using a single AI assistant, we leveraged DollhouseMCP’s agent orchestration capabilities. Here’s how it worked:</p>
+
+<h3 id="1-the-orchestrator-alex-sterling">1. The Orchestrator: Alex Sterling</h3>
+
+<p>We activated the Alex Sterling persona - a thorough, detail-oriented AI colleague designed for complex project management. Alex became our orchestration layer, maintaining context while delegating specialized tasks.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Activate primary orchestrator</span>
+<span class="nx">mcp__dollhousemcp</span><span class="o">-</span><span class="nf">production__activate_element</span><span class="p">(</span>
+  <span class="nx">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">personas</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="2-specialized-agent-team">2. Specialized Agent Team</h3>
+
+<p>Through Alex, we created three specialized agents:</p>
+
+<p><strong>technical-doc-writer</strong></p>
+
+<ul>
+  <li>Focus: Technical documentation, API references, implementation guides</li>
+  <li>Strength: Deep technical accuracy and completeness</li>
+</ul>
+
+<p><strong>roadmap-planner</strong></p>
+
+<ul>
+  <li>Focus: Strategic planning, milestone development, timeline estimation</li>
+  <li>Strength: Realistic project planning with risk assessment</li>
+</ul>
+
+<p><strong>product-architect</strong></p>
+
+<ul>
+  <li>Focus: System design, plugin architecture, technical decisions</li>
+  <li>Strength: Architectural patterns and scalability considerations</li>
+</ul>
+
+<h3 id="3-the-task-tool-context-preservation">3. The Task Tool: Context Preservation</h3>
+
+<p>The breakthrough came from using the Task tool, which allows the main context (Alex) to remain intact while agents work in isolated environments:</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Task</span><span class="p">(</span>
+  <span class="nx">description</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Create technical roadmap</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">subagent_type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">general-purpose</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">prompt</span><span class="p">:</span> <span class="dl">"</span><span class="s2">You are technical-doc-writer agent...</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p>This architecture meant Alex could:</p>
+
+<ul>
+  <li>Maintain overall project understanding</li>
+  <li>Coordinate between agents</li>
+  <li>Ensure consistency across documents</li>
+  <li>Preserve context between tasks</li>
+</ul>
+
+<h2 id="the-execution-four-hours-of-meta-development">The Execution: Four Hours of Meta-Development</h2>
+
+<h3 id="hour-1-strategic-planning">Hour 1: Strategic Planning</h3>
+
+<ul>
+  <li>Created business strategy document</li>
+  <li>Developed monetization gates framework</li>
+  <li>Established beta partner strategy</li>
+</ul>
+
+<h3 id="hour-2-technical-documentation">Hour 2: Technical Documentation</h3>
+
+<ul>
+  <li>Built comprehensive technical roadmap</li>
+  <li>Created plugin development guide</li>
+  <li>Designed workflow element specifications</li>
+</ul>
+
+<h3 id="hour-3-cross-repository-coordination">Hour 3: Cross-Repository Coordination</h3>
+
+<ul>
+  <li>Synchronized documentation across mcp-server, business, and website repos</li>
+  <li>Ensured GitFlow compliance</li>
+  <li>Created consistent messaging</li>
+</ul>
+
+<h3 id="hour-4-review-and-refinement">Hour 4: Review and Refinement</h3>
+
+<ul>
+  <li>Alex reviewed all agent outputs</li>
+  <li>Ensured consistency and completeness</li>
+  <li>Created meta-documentation about the process itself</li>
+</ul>
+
+<h2 id="the-results-exceeding-expectations">The Results: Exceeding Expectations</h2>
+
+<h3 id="quantitative-metrics">Quantitative Metrics</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Documents Created</td>
+      <td>11</td>
+    </tr>
+    <tr>
+      <td>Total Lines</td>
+      <td>3,000+</td>
+    </tr>
+    <tr>
+      <td>Repositories Updated</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <td>Time Spent</td>
+      <td>4 hours</td>
+    </tr>
+    <tr>
+      <td>Time Saved</td>
+      <td>~36 hours</td>
+    </tr>
+    <tr>
+      <td>Quality Score</td>
+      <td>95%+</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="document-highlights">Document Highlights</h3>
+
+<p><strong>Technical Roadmap (188 lines)</strong></p>
+
+<ul>
+  <li>Q3 2025 - Q1 2026 development plan</li>
+  <li>Plugin architecture timeline</li>
+  <li>Platform expansion strategy</li>
+  <li>Success metrics and risk mitigation</li>
+</ul>
+
+<p><strong>Plugin Development Guide (476 lines)</strong></p>
+
+<ul>
+  <li>Complete implementation instructions</li>
+  <li>Best practices and patterns</li>
+  <li>Troubleshooting guide</li>
+  <li>Community contribution guidelines</li>
+</ul>
+
+<p><strong>Workflow Element Plan (345 lines)</strong></p>
+
+<ul>
+  <li>Detailed architecture specifications</li>
+  <li>Meta-development methodology</li>
+  <li>Implementation phases</li>
+  <li>Success criteria</li>
+</ul>
+
+<h2 id="the-innovation-self-improving-systems">The Innovation: Self-Improving Systems</h2>
+
+<p>This achievement represents more than just automated documentation. It demonstrates:</p>
+
+<h3 id="1-true-meta-development">1. True Meta-Development</h3>
+
+<p>DollhouseMCP isn’t just a tool for building AI agents - it’s a platform that can improve itself. The agents understood the system well enough to document it comprehensively.</p>
+
+<h3 id="2-agent-specialization-works">2. Agent Specialization Works</h3>
+
+<p>Rather than one generalist AI, specialized agents produced superior results. Each brought domain expertise:</p>
+
+<ul>
+  <li>Technical accuracy from technical-doc-writer</li>
+  <li>Strategic thinking from roadmap-planner</li>
+  <li>Architectural insight from product-architect</li>
+</ul>
+
+<h3 id="3-context-preservation-is-key">3. Context Preservation is Key</h3>
+
+<p>The Task tool’s ability to preserve Alex’s context while agents worked was crucial. This prevented the context window exhaustion that plagues long AI sessions.</p>
+
+<h3 id="4-quality-matches-human-output">4. Quality Matches Human Output</h3>
+
+<p>The documentation wasn’t just complete - it was good. Clear structure, consistent tone, accurate technical details, and strategic insight throughout.</p>
+
+<h2 id="business-implications">Business Implications</h2>
+
+<h3 id="for-dollhousemcp">For DollhouseMCP</h3>
+
+<ul>
+  <li><strong>Validation</strong>: Our platform can build itself</li>
+  <li><strong>Efficiency</strong>: 85-90% reduction in documentation time</li>
+  <li><strong>Marketing</strong>: Compelling demonstration of capabilities</li>
+  <li><strong>Development</strong>: Can accelerate our own evolution</li>
+</ul>
+
+<h3 id="for-the-industry">For the Industry</h3>
+
+<ul>
+  <li><strong>New Paradigm</strong>: Self-documenting, self-improving software</li>
+  <li><strong>Productivity</strong>: Dramatic reduction in documentation overhead</li>
+  <li><strong>Quality</strong>: AI-generated docs can match human quality</li>
+  <li><strong>Accessibility</strong>: Complex documentation becomes achievable for small teams</li>
+</ul>
+
+<h2 id="technical-deep-dive-how-it-actually-works">Technical Deep Dive: How It Actually Works</h2>
+
+<h3 id="the-orchestration-pattern">The Orchestration Pattern</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Main context (Alex) remains active</span>
+<span class="kd">const</span> <span class="nx">alex</span> <span class="o">=</span> <span class="nf">activePersona</span><span class="p">(</span><span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">);</span>
+
+<span class="c1">// Launch specialized agent with Task tool</span>
+<span class="kd">const</span> <span class="nx">result</span> <span class="o">=</span> <span class="k">await</span> <span class="nc">Task</span><span class="p">({</span>
+  <span class="na">description</span><span class="p">:</span> <span class="dl">"</span><span class="s2">Create technical roadmap</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">subagent_type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">general-purpose</span><span class="dl">"</span><span class="p">,</span>
+  <span class="na">prompt</span><span class="p">:</span> <span class="s2">`You are technical-doc-writer, specialized in creating comprehensive technical documentation...
+           Create a Q3 2025 - Q1 2026 roadmap for DollhouseMCP...`</span>
+<span class="p">});</span>
+
+<span class="c1">// Alex receives and integrates results</span>
+<span class="nx">alex</span><span class="p">.</span><span class="nf">processAgentOutput</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+</code></pre></div></div>
+
+<h3 id="key-design-decisions">Key Design Decisions</h3>
+
+<p><strong>1. Stateless Agents</strong>
+Each agent invocation is stateless, preventing context pollution and ensuring consistency.</p>
+
+<p><strong>2. Detailed Prompts</strong>
+Agents receive comprehensive instructions upfront since they can’t ask clarifying questions.</p>
+
+<p><strong>3. Result Integration</strong>
+Alex synthesizes outputs, ensuring consistency across documents.</p>
+
+<p><strong>4. GitFlow Compliance</strong>
+All changes follow proper Git workflows, maintaining code quality standards.</p>
+
+<h2 id="lessons-learned">Lessons Learned</h2>
+
+<h3 id="what-worked">What Worked</h3>
+
+<ul>
+  <li><strong>Agent specialization</strong> dramatically improved quality</li>
+  <li><strong>Task tool</strong> for context preservation was essential</li>
+  <li><strong>Detailed prompts</strong> prevented ambiguity</li>
+  <li><strong>Alex Sterling</strong> as orchestrator provided consistency</li>
+</ul>
+
+<h3 id="challenges">Challenges</h3>
+
+<ul>
+  <li><strong>Initial setup</strong> required careful prompt engineering</li>
+  <li><strong>Coordination</strong> across repositories needed planning</li>
+  <li><strong>Review cycles</strong> still benefited from human oversight</li>
+  <li><strong>Context limits</strong> required strategic task division</li>
+</ul>
+
+<h3 id="future-improvements">Future Improvements</h3>
+
+<ul>
+  <li><strong>Agent memory</strong> for learning from previous documentation</li>
+  <li><strong>Template library</strong> for common documentation patterns</li>
+  <li><strong>Automated review</strong> cycles between agents</li>
+  <li><strong>Version control</strong> integration for automatic updates</li>
+</ul>
+
+<h2 id="the-future-self-building-software">The Future: Self-Building Software</h2>
+
+<p>This meta-development achievement opens exciting possibilities:</p>
+
+<h3 id="near-term-q4-2025">Near Term (Q4 2025)</h3>
+
+<ul>
+  <li>Automated API documentation generation</li>
+  <li>Self-updating README files</li>
+  <li>Dynamic tutorial creation</li>
+  <li>Intelligent changelog generation</li>
+</ul>
+
+<h3 id="medium-term-q1-2026">Medium Term (Q1 2026)</h3>
+
+<ul>
+  <li>Code generation from documentation</li>
+  <li>Automated test case creation</li>
+  <li>Self-optimizing agent configurations</li>
+  <li>Documentation-driven development</li>
+</ul>
+
+<h3 id="long-term-vision">Long Term Vision</h3>
+
+<ul>
+  <li>Fully self-improving systems</li>
+  <li>AI agents that evolve their own capabilities</li>
+  <li>Automated software architecture evolution</li>
+  <li>Human-AI collaborative development at scale</li>
+</ul>
+
+<h2 id="try-it-yourself">Try It Yourself</h2>
+
+<p>Want to experience meta-development? Here’s how to start:</p>
+
+<h3 id="1-install-dollhousemcp">1. Install DollhouseMCP</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install</span> <span class="nt">-g</span> @dollhousemcp/mcp-server
+</code></pre></div></div>
+
+<h3 id="2-activate-alex-sterling">2. Activate Alex Sterling</h3>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nx">mcp__dollhousemcp</span><span class="o">-</span><span class="nf">production__activate_element</span><span class="p">(</span>
+  <span class="nx">name</span><span class="p">:</span> <span class="dl">"</span><span class="s2">alex-sterling</span><span class="dl">"</span><span class="p">,</span>
+  <span class="nx">type</span><span class="p">:</span> <span class="dl">"</span><span class="s2">personas</span><span class="dl">"</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="3-create-your-agent-team">3. Create Your Agent Team</h3>
+
+<p>Use the Task tool to launch specialized agents for your documentation needs.</p>
+
+<h3 id="4-watch-the-magic">4. Watch the Magic</h3>
+
+<p>Observe as your documentation creates itself, with quality that matches or exceeds manual writing.</p>
+
+<h2 id="conclusion-a-new-era-of-software-development">Conclusion: A New Era of Software Development</h2>
+
+<p>September 2, 2025, marks a milestone in AI-assisted development. We’ve proven that AI agents can not only help us build software - they can build and document themselves. This isn’t just about saving time; it’s about fundamentally changing how we approach software development.</p>
+
+<p>The implications are profound:</p>
+
+<ul>
+  <li><strong>Small teams</strong> can achieve enterprise-scale documentation</li>
+  <li><strong>Open source projects</strong> can maintain professional docs</li>
+  <li><strong>Rapid development</strong> no longer means documentation debt</li>
+  <li><strong>AI and humans</strong> can collaborate at unprecedented scales</li>
+</ul>
+
+<p>DollhouseMCP’s meta-development capability isn’t just a feature - it’s a glimpse into the future of software engineering. A future where AI doesn’t replace developers but amplifies their capabilities exponentially.</p>
+
+<p>Welcome to the era of self-improving software. Welcome to meta-development.</p>
+
+<hr />
+
+<h2 id="about-the-author">About the Author</h2>
+
+<p>Mick Darling is the creator of DollhouseMCP and a product executive exploring the intersection of AI and human creativity. This blog post was written with assistance from Claude and the DollhouseMCP agent team - a perfect example of human-AI collaboration.</p>
+
+<h2 id="resources">Resources</h2>
+
+<ul>
+  <li><a href="https://github.com/DollhouseMCP/mcp-server">DollhouseMCP GitHub Repository</a></li>
+  <li><a href="https://github.com/DollhouseMCP/mcp-server/pull/879">Technical Roadmap (PR #879)</a></li>
+</ul>
+
+<h2 id="join-the-conversation">Join the Conversation</h2>
+
+<p>Have you experimented with meta-development? Share your experiences:</p>
+
+<ul>
+  <li>Twitter: <a href="https://twitter.com/DollhouseMCP">@DollhouseMCP</a></li>
+  <li>GitHub Discussions: <a href="https://github.com/DollhouseMCP/mcp-server/discussions">DollhouseMCP/mcp-server</a></li>
+  <li>Email: <a href="mailto:mick@mickdarling.com">mick@mickdarling.com</a></li>
+</ul>
+
+<hr />
+
+<p><em>This blog post is part of our series on AI-assisted development. Stay tuned for more insights into building the future of software.</em></p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/">
+      <em>Previous Post</em>
+      <strong>The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</strong>
+    </a>
+    
+    
+    <a href="../../blog/story-behind-dollhousemcp/">
+      <em>Next Post</em>
+      <strong>The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

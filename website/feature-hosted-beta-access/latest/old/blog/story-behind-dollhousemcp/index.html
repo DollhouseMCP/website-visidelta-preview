@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A reintroduction and a project announcement - how a simple prompt catalog evolved into something much bigger" />
+<meta property="og:description" content="A reintroduction and a project announcement - how a simple prompt catalog evolved into something much bigger" />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/story-behind-dollhousemcp/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/story-behind-dollhousemcp/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-09-04T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Mick Darling"},"dateModified":"2025-09-04T00:00:00+00:00","datePublished":"2025-09-04T00:00:00+00:00","description":"A reintroduction and a project announcement - how a simple prompt catalog evolved into something much bigger","headline":"The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/story-behind-dollhousemcp/"},"url":"https://dollhousemcp.com../../blog/story-behind-dollhousemcp/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    September 04, 2025 • Mick Darling
+  </p>
+  <h1>The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</h1>
+
+  
+  <p class="lead">A reintroduction and a project announcement - how a simple prompt catalog evolved into something much bigger</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">AI</span>
+    
+    <span class="pill">Open Source</span>
+    
+    <span class="pill">MCP</span>
+    
+    <span class="pill">Product Story</span>
+    
+    <span class="pill">Natural Language</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="the-story-behind-dollhousemcp-from-prompt-envy-to-vibe-tooling">The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</h1>
+
+<p><em>A reintroduction and a project announcement from Mick Darling</em></p>
+
+<p>Hey everyone. Some of you might be wondering where I’ve been for the past few years. The short answer: deep in the AI rabbit hole, building things, breaking things, and eventually creating something I’m genuinely excited to share.</p>
+
+<h2 id="it-started-with-prompt-envy">It Started with Prompt Envy</h2>
+
+<p>We’ve all been there. Someone shares this incredible ChatGPT prompt that writes perfect unit tests, or reviews code like a senior architect, or transforms rambling notes into polished documentation. You copy it. You use it once. You lose it. You find it again but can’t remember what you modified. You modify it again. The cycle continues.</p>
+
+<p>I wanted a simple solution - just a catalog where I could store these prompts and find them when needed. When I discovered Claude Code and started playing with MCP (Model Context Protocol), I thought “perfect, I can build this in a day.”</p>
+
+<p>I was right about the day part. I had a working proof of concept in less than 24 hours.</p>
+
+<p>I was completely wrong about the “simple” part.</p>
+
+<h2 id="the-rabbit-hole">The Rabbit Hole</h2>
+
+<p>As soon as I had that first prototype working, I realized I’d been thinking too small. Way too small.</p>
+
+<p>This wasn’t just about storing prompts. This was about fundamentally changing how we interact with AI tools. Instead of “vibe coding” - where you hope the AI figures out what you want - this could enable what I call “vibe tooling.”</p>
+
+<p>Here’s what I mean:</p>
+
+<p><strong>Traditional AI interaction</strong>: Every session starts fresh. You explain your context, your preferences, your standards. The AI responds. Next session? Start over.</p>
+
+<p><strong>Vibe tooling</strong>: You build tools using natural language that persist and evolve. You don’t write code to create these tools - you just describe what you want. “Be a security-focused code reviewer who’s harsh but constructive.” Done. That tool now exists.</p>
+
+<p>Need to adjust it? “Be less harsh but maintain the security focus.” Version 1.2 of your tool, created with one sentence.</p>
+
+<h2 id="what-dollhousemcp-actually-does">What DollhouseMCP Actually Does</h2>
+
+<p>Over the next two months, this evolved into something much more comprehensive:</p>
+
+<h3 id="personas-with-personality">Personas with Personality</h3>
+
+<p>Not just saved prompts, but actual personas with consistent behavior, preferences, and capabilities. They remember who they are across sessions, across platforms.</p>
+
+<h3 id="skills-that-extend-capabilities">Skills that Extend Capabilities</h3>
+
+<p>A persona can have skills - analyze LinkedIn profiles, generate audio summaries, validate security patterns, write in specific styles. I built an audio summary skill in 5 minutes that actually works. I’m still surprised every time it talks back to me.</p>
+
+<h3 id="templates-for-structure">Templates for Structure</h3>
+
+<p>Reusable document structures, code patterns, analysis frameworks. Build once, use forever, modify with natural language.</p>
+
+<h3 id="agents-with-autonomy">Agents with Autonomy</h3>
+
+<p>They work independently toward goals. When they need a new capability, they can find or create DollhouseMCP elements to solve problems. It’s remarkably self-improving.</p>
+
+<h3 id="memory-that-persists">Memory that Persists</h3>
+
+<p>The context and improvements accumulate. Solve a problem once, and the solution is available forever. Each refinement makes the system more capable.</p>
+
+<h2 id="why-i-could-build-this">Why I Could Build This</h2>
+
+<p>For those who remember Tomorrowish from a decade ago - yes, that was me. We were doing machine learning and neural networks back when mentioning “AI” to investors was a guaranteed way to kill a meeting. The natural language processing patents we developed there? They gave me a fundamentally different understanding of how modern transformer-based LLMs work.</p>
+
+<p>I’m not a 100x developer. I’m not even sure I’m a 10x developer. But I’ve been playing in this space long enough to see patterns others might miss, and to understand what’s actually novel versus what’s just hype.</p>
+
+<h2 id="the-surprise">The Surprise</h2>
+
+<p>What surprised me most wasn’t that it worked - it was how naturally it evolved from a personal tool into something genuinely useful for teams.</p>
+
+<p>When you solve your own problem thoroughly enough, without cutting corners, without compromising on the experience, you sometimes create something others need too.</p>
+
+<h2 id="real-examples-that-made-me-realize-this-was-different">Real Examples That Made Me Realize This Was Different</h2>
+
+<h3 id="the-code-review-persona">The Code Review Persona</h3>
+
+<p>I created “Marcus” - a senior architect persona who reviews code. Not revolutionary, right? Except Marcus remembers our entire codebase structure, our specific error handling patterns, our API conventions. When I tweaked him to be “less pedantic about naming but more strict about error handling,” that preference stuck. Forever.</p>
+
+<h3 id="the-audio-feedback-loop">The Audio Feedback Loop</h3>
+
+<p>I was deep in a debugging session when I realized I’d been reading walls of text for hours. On a whim, I created a skill that summarizes progress in audio. Five minutes later, Claude was literally talking to me, summarizing what we’d found and what to try next. It sounds like a small thing, but it changed how I work.</p>
+
+<h3 id="the-documentation-evolution">The Documentation Evolution</h3>
+
+<p>Started with a simple template for API documentation. Asked it to “make it more like Stripe’s docs.” It adapted. Then “add examples in Python and JavaScript.” It evolved. Now it generates documentation that looks like we hired Stripe’s documentation team. Each refinement built on the last.</p>
+
+<h2 id="whats-next">What’s Next</h2>
+
+<p>DollhouseMCP is open source. It’s on GitHub. It works today with Claude and any MCP-compatible system.</p>
+
+<p>I built this for myself, but I’m sharing it because I think others might find it useful. The documentation is real. The code is clean. The community is already contributing improvements.</p>
+
+<p>If you’re tired of:</p>
+
+<ul>
+  <li>Explaining your codebase to AI every morning</li>
+  <li>Losing track of prompts that worked perfectly</li>
+  <li>Inconsistent AI responses across your team</li>
+  <li>Starting from zero with every new session</li>
+</ul>
+
+<p>Then maybe this is for you.</p>
+
+<h2 id="the-real-question">The Real Question</h2>
+
+<p>What would you teach an AI once if you knew it would remember forever?</p>
+
+<p>For me, it was my code review preferences. Then my documentation style. Then my debugging approach. Now it’s dozens of patterns and preferences that make AI actually useful instead of just impressive.</p>
+
+<p>What would it be for you?</p>
+
+<h2 id="try-it">Try It</h2>
+
+<p>The entire system is open source and available on <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>. It takes about 5 minutes to set up if you’re already using Claude Code.</p>
+
+<p>Or just browse the <a href="https://github.com/DollhouseMCP/collection">community collection</a> to see what personas and skills others have built. Everything from harsh code reviewers to empathetic user researchers to technical documentation specialists.</p>
+
+<p>The best part? If you build something useful, you can share it back with the community. Your solution to a problem might be exactly what someone else needs.</p>
+
+<h2 id="get-in-touch">Get In Touch</h2>
+
+<p>I’m genuinely curious about how others might use this. If you build something interesting, let me know. If you hit a limitation, definitely let me know. If you think this is solving the wrong problem entirely, I want to hear that too.</p>
+
+<p>Find me on <a href="https://linkedin.com/in/mickdarling">LinkedIn</a> or just open an issue on GitHub.</p>
+
+<hr />
+
+<p><em>Mick Darling is the creator of DollhouseMCP and founder of Tomorrowish. He holds multiple patents in natural language processing and has been working with AI/ML since before it was cool (or funded).</em></p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/meta-development-dollhousemcp-agents-build-themselves/">
+      <em>Previous Post</em>
+      <strong>Meta-Development: How DollhouseMCP Agents Built Their Own Documentation</strong>
+    </a>
+    
+    
+    <a href="../../blog/dollhousemcp-console-tour/">
+      <em>Next Post</em>
+      <strong>A Tour of the DollhouseMCP Console</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

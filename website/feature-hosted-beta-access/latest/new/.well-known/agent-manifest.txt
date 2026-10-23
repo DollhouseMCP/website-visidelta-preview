@@ -4,7 +4,7 @@
 # Note: agent-manifest.txt is an emerging proposal, not yet a finalized standard.
 # This file should be reviewed and updated when a stable spec is published.
 # Site: https://dollhousemcp.com
-# Last updated: 2026-10-22
+# Last updated: 2026-10-23
 
 ## Identity
 

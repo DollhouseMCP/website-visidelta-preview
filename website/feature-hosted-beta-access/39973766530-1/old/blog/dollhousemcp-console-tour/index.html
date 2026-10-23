@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>A Tour of the DollhouseMCP Console | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="A Tour of the DollhouseMCP Console" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A walkthrough of the local DollhouseMCP console: guided setup, portfolio browsing, live logs, metrics, and permissions." />
+<meta property="og:description" content="A walkthrough of the local DollhouseMCP console: guided setup, portfolio browsing, live logs, metrics, and permissions." />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/dollhousemcp-console-tour/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/dollhousemcp-console-tour/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2026-04-02T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="A Tour of the DollhouseMCP Console" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Mick Darling"},"dateModified":"2026-04-02T00:00:00+00:00","datePublished":"2026-04-02T00:00:00+00:00","description":"A walkthrough of the local DollhouseMCP console: guided setup, portfolio browsing, live logs, metrics, and permissions.","headline":"A Tour of the DollhouseMCP Console","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/dollhousemcp-console-tour/"},"url":"https://dollhousemcp.com../../blog/dollhousemcp-console-tour/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    April 02, 2026 • Mick Darling
+  </p>
+  <h1>A Tour of the DollhouseMCP Console</h1>
+
+  
+  <p class="lead">A walkthrough of the local DollhouseMCP console: guided setup, portfolio browsing, live logs, metrics, and permissions.</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">dollhousemcp</span>
+    
+    <span class="pill">web-console</span>
+    
+    <span class="pill">mcp</span>
+    
+    <span class="pill">setup</span>
+    
+    <span class="pill">portfolio</span>
+    
+    <span class="pill">security</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="a-tour-of-the-dollhousemcp-console">A Tour of the DollhouseMCP Console</h1>
+
+<p><em>The local web console is one of the fastest ways to understand what DollhouseMCP is doing on your machine, what is installed, and what your active elements are allowed to do.</em></p>
+
+<h2 id="tldr">TL;DR</h2>
+
+<p>Run this in a terminal:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx @dollhousemcp/mcp-server@latest <span class="nt">--web</span>
+</code></pre></div></div>
+
+<p>That launches the local DollhouseMCP console and prints the local console URL in your terminal. From there you get five major views:</p>
+
+<ul>
+  <li><strong>Setup</strong> for guided install across popular MCP clients</li>
+  <li><strong>Portfolio</strong> for browsing your local Dollhouse elements visually</li>
+  <li><strong>Logs</strong> for real-time operational visibility</li>
+  <li><strong>Metrics</strong> for server health, MCP-AQL usage, cache, and Gatekeeper trends</li>
+  <li><strong>Permissions</strong> for seeing the current policy state and live decisions</li>
+</ul>
+
+<p>This post is a quick tour of those tabs and why they matter.</p>
+
+<p>All of the screenshots below were refreshed from the current <code class="language-plaintext highlighter-rouge">2.0.15</code> console so the UI matches what is live now.</p>
+
+<h2 id="setup-guided-install-from-one-place">Setup: Guided Install From One Place</h2>
+
+<p>The Setup tab is the first thing many people will want from the console. Instead of hunting through config files for each client, the setup wizard gives you one place to connect Claude Desktop, Claude Code, Cursor, VS Code, Codex, Gemini CLI, Windsurf, Cline, and LM Studio.</p>
+
+<p>Based on the public quick-start docs, the setup flow supports:</p>
+
+<ul>
+  <li>auto-updating installs using <code class="language-plaintext highlighter-rouge">npx @latest</code></li>
+  <li>pinned-version installs when you want reproducible setups</li>
+  <li>one-click install where the platform supports it</li>
+  <li>copyable manual config blocks when you want to wire it up yourself</li>
+  <li>detection of existing installs so you can see what is already configured</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-setup.png" alt="DollhouseMCP setup tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-setup-dark.png" alt="DollhouseMCP setup tab" />
+</figure>
+
+<p>This is also why the new homepage install flow is now centered on the web launcher. It is the easiest on-ramp we have.</p>
+
+<h2 id="portfolio-your-local-dollhouse-rendered">Portfolio: Your Local Dollhouse, Rendered</h2>
+
+<p>DollhouseMCP elements live in your local portfolio at <code class="language-plaintext highlighter-rouge">~/.dollhouse/portfolio/</code>. The console turns that into a browsable interface so you can search, skim, and inspect what is available without asking the LLM to list everything back to you.</p>
+
+<p>The portfolio browser is especially useful when you already have a meaningful library of elements. You can browse by type, search by name or description, and move between your local portfolio and collection-aware surfaces without leaving the console.</p>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-portfolio.png" alt="DollhouseMCP portfolio tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-portfolio-dark.png" alt="DollhouseMCP portfolio tab" />
+</figure>
+
+<p>For people new to DollhouseMCP, this tab makes the model of the system much easier to understand: elements are not abstract ideas floating around in a prompt. They are concrete, local building blocks you can browse and manage.</p>
+
+<h2 id="logs-real-time-operational-visibility">Logs: Real-Time Operational Visibility</h2>
+
+<p>The Logs tab is the operational side of the console. According to the public logging guide, the console exposes a browser viewer backed by the same logging system that writes to <code class="language-plaintext highlighter-rouge">~/.dollhouse/logs/</code>.</p>
+
+<p>The logging surface is designed for actual debugging work, not just decoration. The public docs call out capabilities such as:</p>
+
+<ul>
+  <li>category, level, and source filtering</li>
+  <li>text search</li>
+  <li>pause and resume for streaming</li>
+  <li>live updates over Server-Sent Events</li>
+  <li>backfill on connect so you are not only seeing brand-new events</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-logs.png" alt="DollhouseMCP logs tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-logs-dark.png" alt="DollhouseMCP logs tab" />
+</figure>
+
+<p>This screenshot shows real startup and activation events from a live console session. That is useful in its own right: the tab is not just a pretty shell, it is already a workable way to confirm that ingestion routes, filters, and severity handling are doing what you expect.</p>
+
+<h2 id="metrics-what-the-server-is-doing-internally">Metrics: What the Server Is Doing Internally</h2>
+
+<p>The Metrics tab gives you a higher-level view than raw logs. Instead of individual events, it surfaces the health and behavior of the running server.</p>
+
+<p>The public front-end and docs show metrics cards for things like:</p>
+
+<ul>
+  <li>system health</li>
+  <li>search performance</li>
+  <li>MCP-AQL operations</li>
+  <li>cache efficiency</li>
+  <li>security</li>
+  <li>Gatekeeper policy trends</li>
+  <li>locks and I/O</li>
+  <li>metrics system status</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-metrics.png" alt="DollhouseMCP metrics tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-metrics-dark.png" alt="DollhouseMCP metrics tab" />
+</figure>
+
+<p>Metrics take a moment to warm up because the first snapshot is collected on an interval after the server starts. Once that first snapshot lands, the dashboard becomes a genuinely useful quick read on memory, CPU, cache activity, security counters, and metrics pipeline health.</p>
+
+<h2 id="permissions-making-gatekeeper-visible">Permissions: Making Gatekeeper Visible</h2>
+
+<p>The Permissions tab is one of my favorite additions because it makes the Gatekeeper model legible. DollhouseMCP does not treat permissions as an invisible implementation detail. Active elements can change what operations are allowed, denied, or require confirmation, and the console gives you a way to see that state directly.</p>
+
+<p>The public README and docs describe Gatekeeper as a server-side enforcement layer that applies active element policies across MCP-AQL operations. In the console, that becomes tangible:</p>
+
+<ul>
+  <li>current policy sources</li>
+  <li>allow patterns</li>
+  <li>deny patterns</li>
+  <li>confirm patterns</li>
+  <li>a live decision feed</li>
+  <li>lightweight autonomy and decision counters</li>
+</ul>
+
+<figure class="theme-figure">
+  <img class="theme-figure-image theme-figure-image--light" src="/assets/images/blog/dollhouse-console-permissions.png" alt="DollhouseMCP permissions tab" />
+  <img class="theme-figure-image theme-figure-image--dark" src="/assets/images/blog/dollhouse-console-permissions-dark.png" alt="DollhouseMCP permissions tab" />
+</figure>
+
+<p>In this capture, the permission sources come from active demo elements with explicit allow, deny, and confirm patterns, so you can see the policy layer and the resulting live decisions side by side.</p>
+
+<p>That visibility matters. If your AI is being shaped by personas, skills, ensembles, and policy-driven workflows, you should be able to inspect the permission layer instead of trusting it blindly.</p>
+
+<h2 id="why-the-console-matters">Why the Console Matters</h2>
+
+<p>The console is not the product by itself, but it makes the rest of the platform much easier to understand and operate.</p>
+
+<p>It gives new users a guided starting point, power users a visual portfolio browser, and developers a real debugging and observability surface. Just as importantly, it helps explain what is different about DollhouseMCP: local elements, platform-wide setup, server-side policy enforcement, and a runtime you can actually inspect.</p>
+
+<p>If you have only interacted with DollhouseMCP through MCP tool calls so far, it is worth launching the console and clicking around for a few minutes. It makes the shape of the platform much more obvious.</p>
+
+<h2 id="try-it">Try It</h2>
+
+<p>Copy this, paste it into a terminal, and run it:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npx @dollhousemcp/mcp-server@latest <span class="nt">--web</span>
+</code></pre></div></div>
+
+<p>Then open the local console URL printed by the server and take a look around.</p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/story-behind-dollhousemcp/">
+      <em>Previous Post</em>
+      <strong>The Story Behind DollhouseMCP: From Prompt Envy to Vibe Tooling</strong>
+    </a>
+    
+    
+    <a href="../../blog/the-security-model-behind-dollhousemcp/">
+      <em>Next Post</em>
+      <strong>The Security Model Behind DollhouseMCP</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

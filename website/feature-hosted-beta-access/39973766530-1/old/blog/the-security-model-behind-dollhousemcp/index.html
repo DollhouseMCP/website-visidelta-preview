@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>The Security Model Behind DollhouseMCP | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="The Security Model Behind DollhouseMCP" />
+<meta name="author" content="Mick Darling" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Giving an AI more power means trusting it less, not more. Here is how DollhouseMCP is built so that a model being wrong, compromised, or manipulated is never enough to cause harm." />
+<meta property="og:description" content="Giving an AI more power means trusting it less, not more. Here is how DollhouseMCP is built so that a model being wrong, compromised, or manipulated is never enough to cause harm." />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/the-security-model-behind-dollhousemcp/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/the-security-model-behind-dollhousemcp/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2026-05-15T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The Security Model Behind DollhouseMCP" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@Mick Darling" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Mick Darling"},"dateModified":"2026-05-15T00:00:00+00:00","datePublished":"2026-05-15T00:00:00+00:00","description":"Giving an AI more power means trusting it less, not more. Here is how DollhouseMCP is built so that a model being wrong, compromised, or manipulated is never enough to cause harm.","headline":"The Security Model Behind DollhouseMCP","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/the-security-model-behind-dollhousemcp/"},"url":"https://dollhousemcp.com../../blog/the-security-model-behind-dollhousemcp/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    May 15, 2026 • Mick Darling
+  </p>
+  <h1>The Security Model Behind DollhouseMCP</h1>
+
+  
+  <p class="lead">Giving an AI more power means trusting it less, not more. Here is how DollhouseMCP is built so that a model being wrong, compromised, or manipulated is never enough to cause harm.</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">dollhousemcp</span>
+    
+    <span class="pill">security</span>
+    
+    <span class="pill">agentic-ai</span>
+    
+    <span class="pill">trust</span>
+    
+    <span class="pill">mcp</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="the-security-model-behind-dollhousemcp">The Security Model Behind DollhouseMCP</h1>
+
+<p><em>Why I built DollhouseMCP to distrust its own AI — and what that means if you are deciding whether to run it.</em></p>
+
+<p>Here is the uncomfortable thing about agentic AI. The more useful you make it, the more dangerous it becomes. A model that can only chat is mostly harmless. A model that can read your files, run commands, pull in code from the internet, and act on its own for several steps in a row is genuinely powerful — and that same power is exactly what an attacker, or just a confused model, would use to do damage.</p>
+
+<p>DollhouseMCP makes AI behavior programmable. Personas, skills, and ensembles change what the assistant knows, how it acts, and what it is allowed to do. That is the product. It is also, if you think about it for more than a minute, an attack surface. So the question I had to answer before I could ship any of it was simple: how do you give an AI this much capability without having to trust it?</p>
+
+<p>The answer runs through the entire platform, and I want to walk through it the way I would explain it to someone deciding whether to put this on their machine or in front of their team.</p>
+
+<h2 id="the-one-principle-everything-else-hangs-from">The one principle everything else hangs from</h2>
+
+<p>If you remember nothing else, remember this: in DollhouseMCP, the model’s instructions are suggestions, and the server’s policies are enforcement.</p>
+
+<p>That distinction is the whole game. A large language model can be talked into almost anything. It can be prompt-injected by a file it reads. It can be socially engineered by content that looks innocent. It can simply be wrong. If your safety story depends on the model choosing to behave, you do not have a safety story.</p>
+
+<p>So in DollhouseMCP the enforcement does not live in the prompt. It lives in the server, in code, after the model has already decided what it wants to do. Every privileged operation is checked by a server-side policy engine called the Gatekeeper. And here is the part that matters most for trust: this still applies even if your MCP client has “always allow” turned on. The client approving a tool call does not end the conversation. The server gets the final word, and the model cannot argue with it.</p>
+
+<h2 id="defense-in-depth-not-a-single-wall">Defense in depth, not a single wall</h2>
+
+<p>One check is a single point of failure. DollhouseMCP is built as a stack of independent layers, each defending a different class of threat, each able to stop an operation on its own. A few of the ones I am most confident about:</p>
+
+<ul>
+  <li><strong>The Gatekeeper</strong> decides, for every operation, whether it is auto-approved, needs confirmation, or is denied outright. Some operations — deleting elements, executing agents — can never be silently auto-approved by any policy. And if a restrictive element even removes the ability to confirm exceptions, the session quietly drops to read-only. There is no clever path back in.</li>
+  <li><strong>Content validation</strong> treats every persona, skill, and template as untrusted input. Before any of it reaches the model, it is scanned for prompt-injection patterns, normalized for Unicode tricks like invisible characters and look-alike letters, and parsed through a hardened YAML reader that rejects the classic “YAML bomb” denial-of-service attacks.</li>
+  <li><strong>The autonomy evaluator</strong> sits in the agent loop. Before every autonomous step, it decides: continue, pause for a human, or escalate. It looks at how many steps have run, whether the last one failed, how risky the next action is, and — crucially — whether the action is reversible.</li>
+  <li><strong>Danger zone enforcement</strong> is the layer past the point where a prompt is enough. When an agent crosses a hard line, it is blocked at the process level, and that block survives a restart. Clearing it requires a one-time code shown in a native OS dialog that never appears in the model’s response — so a compromised model cannot read its own way out.</li>
+</ul>
+
+<p>There is more underneath this — encrypted credential storage, path-traversal protection with symlink resolution, a command allowlist, rate limiting, per-session isolation — and I wrote it all up in detail on the new <a href="/security/">security page</a>. If you are evaluating DollhouseMCP for anything sensitive, that page is the one to read.</p>
+
+<h2 id="risk-is-not-the-same-as-irreversibility">Risk is not the same as irreversibility</h2>
+
+<p>One design decision I am proud of is small and easy to miss. Most systems score a command by how “dangerous” it sounds. That is not enough. <code class="language-plaintext highlighter-rouge">git checkout -b feature</code> sounds risky and is trivially undone. <code class="language-plaintext highlighter-rouge">git stash drop</code> sounds routine and is gone forever. DollhouseMCP tracks risk and irreversibility as separate signals, so the operations you genuinely cannot take back get gated even when their raw risk score looks modest. The thing that hurts is not always the thing that looks scary.</p>
+
+<h2 id="trust-the-platform-then-verify-it">Trust the platform, then verify it</h2>
+
+<p>I do not expect anyone to take a security claim on faith — that would contradict the entire point of this post. So two things.</p>
+
+<p>First, DollhouseMCP is built to be inspected, not believed. The local console has a Permissions tab that shows you the live policy state and the decisions the Gatekeeper is making as they happen. You can watch it work. <a href="/dynamic-permissioning.html">Dynamic permissioning</a> explains how active elements reshape that surface in real time.</p>
+
+<p>Second, the defenses are verified continuously, not shipped once and forgotten. Static analysis runs on every change. An automated security audit runs on every pull request and on a daily schedule. Dependency vulnerabilities block merges. A weekly job reconciles the dependency tree against public advisory databases. And there is a standing suite of security-specific tests covering injection, path traversal, Unicode attacks, token handling, and the OWASP Top 10. The whole project is public, and the <a href="https://github.com/DollhouseMCP/mcp-server/blob/main/SECURITY.md">security policy</a> — including how to report a vulnerability — is in the repository.</p>
+
+<h2 id="what-this-means-for-you">What this means for you</h2>
+
+<p>If you are deciding whether to run DollhouseMCP, the honest summary is this. The platform assumes the AI can be wrong, the content can be hostile, and the client can be too permissive. None of those is enough on its own to cause harm, because the enforcement is not a suggestion the model can override. It is the server, and it does not negotiate.</p>
+
+<p>That is the trade I wanted: more capability, with less trust required to use it safely. The full technical breakdown of every layer is on the <a href="/security/">security page</a>.</p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/dollhousemcp-console-tour/">
+      <em>Previous Post</em>
+      <strong>A Tour of the DollhouseMCP Console</strong>
+    </a>
+    
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>

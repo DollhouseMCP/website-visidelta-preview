@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code | DollhouseMCP</title>
+    <!-- Meta-tag CSP is a fallback for GitHub Pages; frame-ancestors is enforced via _headers, not here. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+
+    <!-- Begin Jekyll SEO tag v2.8.0 -->
+<meta name="generator" content="Jekyll v4.4.1" />
+<meta property="og:title" content="Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code" />
+<meta name="author" content="DollhouseMCP Team" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone" />
+<meta property="og:description" content="How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone" />
+<link rel="canonical" href="https://dollhousemcp.com../../blog/mobile-development-workflow-blink-tmux-claude/" />
+<meta property="og:url" content="https://dollhousemcp.com../../blog/mobile-development-workflow-blink-tmux-claude/" />
+<meta property="og:site_name" content="DollhouseMCP" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-08-18T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code" />
+<meta name="twitter:site" content="@mickdarling" />
+<meta name="twitter:creator" content="@DollhouseMCP Team" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"DollhouseMCP Team"},"dateModified":"2025-08-18T00:00:00+00:00","datePublished":"2025-08-18T00:00:00+00:00","description":"How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone","headline":"Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code","mainEntityOfPage":{"@type":"WebPage","@id":"https://dollhousemcp.com../../blog/mobile-development-workflow-blink-tmux-claude/"},"url":"https://dollhousemcp.com../../blog/mobile-development-workflow-blink-tmux-claude/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+    <link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png" />
+    <link rel="alternate" type="application/rss+xml" title="DollhouseMCP Blog Feed" href="../../blog/feed.xml" />
+    <link rel="stylesheet" href="../../assets/css/atelier.css" />
+  </head>
+  <body>
+    <div class="page-noise" aria-hidden="true"></div>
+
+    <header class="site-header">
+  <a class="brand" href="../../">
+    <img class="brand-logo" src="../../assets/images/dollhouse-org-orange-chimney.svg" alt="DollhouseMCP logo" />
+    <span>
+      <strong>DollhouseMCP</strong>
+      <em>Open-source AI customization through modular elements</em>
+    </span>
+  </a>
+
+  <div class="header-actions">
+    <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode">
+      <span class="theme-toggle-icon" id="theme-toggle-icon" aria-hidden="true">☾</span>
+      <span class="sr-only" id="theme-toggle-label">Switch to dark mode</span>
+    </button>
+    <button class="menu-toggle" id="menu-toggle" aria-expanded="false" aria-controls="site-nav">
+      Menu
+    </button>
+  </div>
+
+  <nav class="site-nav" id="site-nav" aria-label="Primary">
+    <a href="../../">Home</a>
+    <a href="../../blog/">Blog</a>
+    <a href="../../security/">Security</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a class="nav-key-link" href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a class="nav-key-link" href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a class="nav-key-link" href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a class="nav-key-link" href="https://collection.dollhousemcp.com/">Collection</a>
+  </nav>
+</header>
+
+
+    <main id="main-content">
+      
+
+
+
+
+<article class="prose prose-post" data-prose-shell>
+  <p class="eyebrow">
+    August 18, 2025 • DollhouseMCP Team
+  </p>
+  <h1>Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</h1>
+
+  
+  <p class="lead">How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone</p>
+  
+
+  
+  <div class="pill-row">
+    
+    <span class="pill">mobile</span>
+    
+    <span class="pill">blink</span>
+    
+    <span class="pill">tmux</span>
+    
+    <span class="pill">claude</span>
+    
+    <span class="pill">iphone</span>
+    
+    <span class="pill">workflow</span>
+    
+    <span class="pill">remote-development</span>
+    
+  </div>
+  
+
+  <div class="post-content">
+    <h1 id="building-dollhousemcp-from-anywhere-our-mobile-development-workflow-with-blink-tmux-and-claude-code">Building DollhouseMCP from Anywhere: Our Mobile Development Workflow with Blink, tmux, and Claude Code</h1>
+
+<p><em>How we built an enterprise-grade MCP server while commuting, traveling, and working from coffee shops using just an iPhone</em></p>
+
+<h2 id="tldr-ai-friendly-summary">TL;DR (AI-Friendly Summary)</h2>
+
+<p><strong>Challenge</strong>: Building complex AI infrastructure (DollhouseMCP) requires powerful development environments, but we wanted to work from anywhere - including iPhones.</p>
+
+<p><strong>Solution</strong>: A sophisticated mobile development workflow combining:</p>
+
+<ul>
+  <li><strong>Mac Studio</strong> as the always-on development server</li>
+  <li><strong>Claude Code</strong> (Anthropic’s official CLI) for AI-assisted development</li>
+  <li><strong>tmux</strong> for persistent, resumable sessions</li>
+  <li><strong>Blink Shell</strong> on iPhone/iPad for professional mobile terminal access</li>
+</ul>
+
+<p><strong>Impact</strong>: Successfully developed, tested, and deployed a 96%+ test coverage MCP server with patent-pending features - often from just an iPhone while traveling.</p>
+
+<p><strong>Keywords</strong>: Mobile development, Claude Code, tmux, Blink Shell, remote development, iPhone coding, SSH workflow, AI-assisted programming, DollhouseMCP</p>
+
+<hr />
+
+<h2 id="the-origin-story-building-ai-infrastructure-on-the-go">The Origin Story: Building AI Infrastructure on the Go</h2>
+
+<p>When we started building DollhouseMCP - our Model Context Protocol server that brings enterprise-grade memory and ensemble capabilities to Claude Desktop - we had an unusual constraint: our lead developer travels extensively and wanted to maintain full development capability from just an iPhone.</p>
+
+<p>This isn’t about writing a quick script or fixing a typo. We’re talking about:</p>
+
+<ul>
+  <li>Managing a 50+ element MCP server with complex TypeScript architecture</li>
+  <li>Running comprehensive test suites with 96%+ coverage requirements</li>
+  <li>Implementing patent-pending memory management systems</li>
+  <li>Coordinating GitFlow workflows across multiple repositories</li>
+  <li>Deploying to NPM and managing production releases</li>
+</ul>
+
+<p>All from a device that fits in your pocket.</p>
+
+<h2 id="the-setup-your-iphone-as-a-development-powerhouse">The Setup: Your iPhone as a Development Powerhouse</h2>
+
+<h3 id="the-stack">The Stack</h3>
+
+<div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>iPhone (Blink Shell)
+    ↓ SSH
+Mac Studio (Always On)
+    ↓ tmux (Persistent Sessions)
+VS Code + Claude Code Extension
+    ↓
+Full Development Environment
+</code></pre></div></div>
+
+<h3 id="essential-configuration">Essential Configuration</h3>
+
+<p>Here’s the exact tmux configuration that makes this workflow seamless:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># ~/.tmux.conf - Optimized for mobile development</span>
+<span class="nb">set</span> <span class="nt">-g</span> history-limit 50000     <span class="c"># Large buffer for Claude's detailed outputs</span>
+<span class="nb">set</span> <span class="nt">-g</span> prefix C-a              <span class="c"># Ctrl-a is easier than Ctrl-b on mobile</span>
+<span class="nb">set</span> <span class="nt">-g</span> mouse on                <span class="c"># Critical for touch scrolling</span>
+<span class="nb">set</span> <span class="nt">-g</span> base-index 1           <span class="c"># Intuitive window numbering</span>
+<span class="nb">set</span> <span class="nt">-g</span> renumber-windows on    <span class="c"># Auto-renumber when closing windows</span>
+<span class="nb">set</span> <span class="nt">-sg</span> escape-time 0         <span class="c"># Instant response for mobile connections</span>
+</code></pre></div></div>
+
+<h3 id="blink-shell-the-secret-weapon">Blink Shell: The Secret Weapon</h3>
+
+<p>Blink Shell transforms your iPhone into a legitimate development terminal. With tmux mouse mode enabled, the touch gestures become incredibly intuitive:</p>
+
+<ul>
+  <li><strong>Two-finger swipe</strong>: Scroll through thousands of lines of Claude’s analysis</li>
+  <li><strong>Tap and hold</strong>: Start selecting text (perfect for copying error messages)</li>
+  <li><strong>Drag</strong>: Extend selection across multiple lines</li>
+  <li><strong>Two-finger tap</strong>: Paste (great for moving code between files)</li>
+  <li><strong>Pinch</strong>: Zoom to see more code or focus on details</li>
+</ul>
+
+<h2 id="real-world-development-scenarios">Real-World Development Scenarios</h2>
+
+<h3 id="scenario-1-the-coffee-shop-debugging-session">Scenario 1: The Coffee Shop Debugging Session</h3>
+
+<p>Picture this: You’re at a coffee shop, and a critical bug report comes in. Here’s the actual workflow:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># From iPhone, connect to your development server</span>
+ssh mac-studio
+
+<span class="c"># Attach to existing session (everything still running)</span>
+tmux attach <span class="nt">-t</span> dollhouse-dev
+
+<span class="c"># Claude Code is waiting with context</span>
+<span class="c"># You can immediately ask: "What were we debugging?"</span>
+<span class="c"># Claude remembers the entire session context</span>
+</code></pre></div></div>
+
+<p>Claude Code maintains context across disconnections. Your tmux session preserves:</p>
+
+<ul>
+  <li>All terminal output</li>
+  <li>Claude’s conversation history</li>
+  <li>Running processes (tests, builds, servers)</li>
+  <li>Open file states</li>
+</ul>
+
+<h3 id="scenario-2-the-commute-feature-development">Scenario 2: The Commute Feature Development</h3>
+
+<p>During a 45-minute train ride, we implemented an entire new MCP element:</p>
+
+<ol>
+  <li><strong>Start on iPhone</strong>: Connect to tmux session</li>
+  <li><strong>Claude analyzes requirements</strong>: “Implement a clipboard manager element with persistent history”</li>
+  <li><strong>Claude writes tests first</strong>: Full TDD workflow</li>
+  <li><strong>Implementation happens</strong>: Watch Claude write TypeScript in real-time</li>
+  <li><strong>Tests run automatically</strong>: See results on phone screen</li>
+  <li><strong>Git commit and push</strong>: All from the iPhone</li>
+  <li><strong>PR created</strong>: Using GitHub CLI through Claude</li>
+</ol>
+
+<p>The 50,000 line scrollback buffer means you never lose Claude’s detailed explanations or test outputs, even during complex refactoring sessions.</p>
+
+<h3 id="scenario-3-the-emergency-hotfix-from-the-airport">Scenario 3: The Emergency Hotfix from the Airport</h3>
+
+<p>True story: While waiting for a flight, we discovered a critical issue with our npx execution detection (the bug that became our previous blog post). Here’s how we fixed it entirely from an iPhone:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Quick connection</span>
+ssh mac-studio <span class="o">&amp;&amp;</span> tmux a
+
+<span class="c"># Claude immediately available</span>
+<span class="s2">"Claude, the server shows 'disconnected' when run via npx"</span>
+
+<span class="c"># Claude's investigation (all visible on phone)</span>
+- Analyzes startup sequence
+- Identifies import.meta.url mismatch
+- Proposes detection logic fix
+- Implements progressive retry delays
+- Runs full <span class="nb">test </span>suite
+- Creates hotfix branch
+- Pushes fix
+
+<span class="c"># Total time: 12 minutes</span>
+<span class="c"># Device used: iPhone 14 Pro</span>
+<span class="c"># Location: Airport gate B23</span>
+</code></pre></div></div>
+
+<h2 id="the-unique-dollhousemcp-development-features">The Unique DollhouseMCP Development Features</h2>
+
+<h3 id="1-ai-assisted-architecture-decisions">1. AI-Assisted Architecture Decisions</h3>
+
+<p>When building complex features like our Memory element (which provides persistent context across sessions), we can have deep architectural discussions with Claude while seeing real code changes:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Claude explains while coding:</span>
+<span class="dl">"</span><span class="s2">The Memory element uses a singleton pattern to ensure 
+consistent state across all MCP operations. Let me show 
+you the implementation...</span><span class="dl">"</span>
+
+<span class="c1">// Then immediately writes and tests the code</span>
+<span class="c1">// All visible and scrollable on your phone</span>
+</code></pre></div></div>
+
+<h3 id="2-test-driven-development-on-mobile">2. Test-Driven Development on Mobile</h3>
+
+<p>Our 96%+ test coverage wasn’t achieved despite mobile development - it was enhanced by it. The constraint of a small screen forces focus:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Claude's typical TDD workflow (perfect for mobile viewing)</span>
+1. Write <span class="nb">test</span> <span class="o">(</span>see it fail - red<span class="o">)</span>
+2. Implement minimum code <span class="o">(</span>see it pass - green<span class="o">)</span>
+3. Refactor <span class="o">(</span>maintain green<span class="o">)</span>
+4. Commit with descriptive message
+</code></pre></div></div>
+
+<h3 id="3-multi-repository-management">3. Multi-Repository Management</h3>
+
+<p>DollhouseMCP spans multiple repositories (public server, private business docs, experimental features). Claude Code + tmux handles this elegantly:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Tmux windows for different repos</span>
+Ctrl-a c  <span class="c"># New window for mcp-server</span>
+Ctrl-a c  <span class="c"># New window for experimental</span>
+Ctrl-a c  <span class="c"># New window for website</span>
+
+<span class="c"># Switch between them instantly</span>
+Ctrl-a 1  <span class="c"># Main server development</span>
+Ctrl-a 2  <span class="c"># Patent-pending features</span>
+Ctrl-a 3  <span class="c"># Documentation/blog posts</span>
+</code></pre></div></div>
+
+<h2 id="advanced-tips-and-tricks">Advanced Tips and Tricks</h2>
+
+<h3 id="1-optimizing-claude-code-for-mobile">1. Optimizing Claude Code for Mobile</h3>
+
+<p>Claude Code outputs can be verbose. For mobile efficiency:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Start requests with mobile context</span>
+<span class="s2">"On mobile, concisely: [your request]"</span>
+
+<span class="c"># Claude adapts output for smaller screens</span>
+<span class="c"># Still detailed but more structured</span>
+</code></pre></div></div>
+
+<h3 id="2-handling-large-outputs">2. Handling Large Outputs</h3>
+
+<p>When Claude analyzes large codebases:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Use tmux's search within scroll mode</span>
+Ctrl-a <span class="o">[</span>      <span class="c"># Enter scroll mode</span>
+Ctrl-s        <span class="c"># Search forward</span>
+typing...     <span class="c"># Your search term</span>
+Enter         <span class="c"># Find next match</span>
+q             <span class="c"># Exit scroll mode</span>
+</code></pre></div></div>
+
+<h3 id="3-session-management-strategy">3. Session Management Strategy</h3>
+
+<p>We use descriptive session names for different aspects:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>tmux new <span class="nt">-s</span> dollhouse-main    <span class="c"># Primary development</span>
+tmux new <span class="nt">-s</span> dollhouse-test    <span class="c"># Test suite monitoring</span>
+tmux new <span class="nt">-s</span> dollhouse-docs    <span class="c"># Documentation writing</span>
+</code></pre></div></div>
+
+<h3 id="4-the-power-of-background-processes">4. The Power of Background Processes</h3>
+
+<p>Start long-running tasks and check them from anywhere:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Start comprehensive test suite</span>
+npm <span class="nb">test</span> &amp;
+
+<span class="c"># Disconnect, go to lunch</span>
+Ctrl-a d
+
+<span class="c"># Check results from phone later</span>
+tmux attach
+<span class="c"># See complete test results in scrollback</span>
+</code></pre></div></div>
+
+<h2 id="challenges-we-solved">Challenges We Solved</h2>
+
+<h3 id="challenge-1-claude-code-arrow-keys">Challenge 1: Claude Code Arrow Keys</h3>
+
+<p><strong>Problem</strong>: Arrow keys cycle through Claude’s input history instead of scrolling terminal.</p>
+
+<p><strong>Solution</strong>: Enable mouse mode (<code class="language-plaintext highlighter-rouge">set -g mouse on</code>). Touch gestures replace arrow key navigation perfectly.</p>
+
+<h3 id="challenge-2-connection-drops">Challenge 2: Connection Drops</h3>
+
+<p><strong>Problem</strong>: Cellular connections are unstable.</p>
+
+<p><strong>Solution</strong>: tmux persists everything. Reconnect and continue exactly where you left off. Claude Code maintains conversation context.</p>
+
+<h3 id="challenge-3-code-review-on-small-screens">Challenge 3: Code Review on Small Screens</h3>
+
+<p><strong>Problem</strong>: Reviewing large diffs on iPhone screen.</p>
+
+<p><strong>Solution</strong>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Use Claude to summarize changes</span>
+<span class="s2">"Summarize the key changes in this PR"</span>
+
+<span class="c"># Claude provides structured overview</span>
+<span class="c"># Then dive into specific files as needed</span>
+</code></pre></div></div>
+
+<h2 id="the-results-what-weve-achieved">The Results: What We’ve Achieved</h2>
+
+<p>Using this mobile workflow, we’ve successfully:</p>
+
+<ol>
+  <li><strong>Launched DollhouseMCP v1.4.4</strong> - Full NPM package deployment from an iPhone</li>
+  <li><strong>Maintained 96%+ test coverage</strong> - No quality compromises</li>
+  <li><strong>Implemented patent-pending features</strong> - Complex memory management systems</li>
+  <li><strong>Fixed critical bugs in production</strong> - Often within minutes of discovery</li>
+  <li><strong>Written comprehensive documentation</strong> - Including this blog post (yes, from an iPhone)</li>
+</ol>
+
+<h2 id="performance-metrics">Performance Metrics</h2>
+
+<p>Our mobile development sessions typically achieve:</p>
+
+<ul>
+  <li><strong>Response time</strong>: &lt; 100ms for most operations (on good connections)</li>
+  <li><strong>Uptime</strong>: 99.9% (Mac Studio reliability)</li>
+  <li><strong>Context retention</strong>: 100% (tmux never loses state)</li>
+  <li><strong>Development velocity</strong>: 90% of desktop speed</li>
+  <li><strong>Flexibility gain</strong>: ∞ (can literally work from anywhere)</li>
+</ul>
+
+<h2 id="why-this-matters-for-dollhousemcp">Why This Matters for DollhouseMCP</h2>
+
+<p>Building an MCP server requires deep focus and continuous context. Traditional mobile development (using phone apps or web IDEs) breaks this flow. Our approach maintains:</p>
+
+<ol>
+  <li><strong>Full development environment</strong>: Everything works exactly as on desktop</li>
+  <li><strong>AI assistance</strong>: Claude Code provides intelligent pair programming</li>
+  <li><strong>Professional tools</strong>: Real terminal, real editors, real Git</li>
+  <li><strong>Persistent context</strong>: Never lose your train of thought</li>
+</ol>
+
+<h2 id="getting-started-your-own-mobile-setup">Getting Started: Your Own Mobile Setup</h2>
+
+<p>Want to replicate our workflow? Here’s the quickstart:</p>
+
+<h3 id="prerequisites">Prerequisites</h3>
+
+<ul>
+  <li>Mac Studio/Mini/iMac (any always-on Mac)</li>
+  <li>Blink Shell ($20 - worth every penny)</li>
+  <li>Claude Code CLI (free from Anthropic)</li>
+  <li>tmux (already on macOS)</li>
+</ul>
+
+<h3 id="setup-commands">Setup Commands</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># On your Mac</span>
+brew <span class="nb">install </span>tmux
+npm <span class="nb">install</span> <span class="nt">-g</span> @anthropic/claude-cli
+<span class="nb">echo</span> <span class="s2">"set -g mouse on"</span> <span class="o">&gt;&gt;</span> ~/.tmux.conf
+<span class="nb">echo</span> <span class="s2">"set -g prefix C-a"</span> <span class="o">&gt;&gt;</span> ~/.tmux.conf
+
+<span class="c"># Start tmux session</span>
+tmux new <span class="nt">-s</span> dev
+
+<span class="c"># In tmux, start Claude Code</span>
+claude
+
+<span class="c"># From iPhone (Blink Shell)</span>
+ssh your-mac
+tmux attach <span class="nt">-t</span> dev
+<span class="c"># You're now developing!</span>
+</code></pre></div></div>
+
+<h2 id="the-future-where-were-going">The Future: Where We’re Going</h2>
+
+<p>As we continue building DollhouseMCP, this mobile workflow evolves:</p>
+
+<ol>
+  <li><strong>iPad optimization</strong>: Leveraging larger screens when available</li>
+  <li><strong>Keyboard shortcuts</strong>: Custom Blink configurations for common operations</li>
+  <li><strong>Multi-device sync</strong>: Seamless transitions between phone/iPad/desktop</li>
+  <li><strong>Voice coding</strong>: Exploring Claude’s voice capabilities for hands-free development</li>
+</ol>
+
+<h2 id="conclusion-redefining-mobile-development">Conclusion: Redefining “Mobile Development”</h2>
+
+<p>When people hear “mobile development,” they think of building apps for phones. We’ve redefined it as building enterprise-grade software FROM phones.</p>
+
+<p>DollhouseMCP exists because we refused to accept that serious development requires sitting at a desk. Every feature, every test, every deployment can happen from anywhere with cellular signal.</p>
+
+<p>The next time you’re stuck somewhere with just your phone, remember: you have a supercomputer in your pocket. With the right tools - Blink Shell, tmux, and Claude Code - you’re not limited by your location. You’re liberated by it.</p>
+
+<h2 id="try-it-yourself">Try It Yourself</h2>
+
+<p>DollhouseMCP is open source and available now:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>npm <span class="nb">install</span> <span class="nt">-g</span> @dollhousemcp/mcp-server
+</code></pre></div></div>
+
+<p>Configure it in Claude Desktop and experience the MCP server we built from coffee shops, airports, and train rides around the world.</p>
+
+<hr />
+
+<p><em>Have questions about our mobile workflow? Found this helpful? Let us know in the <a href="https://github.com/DollhouseMCP/mcp-server/discussions">DollhouseMCP discussions</a>.</em></p>
+
+<p><em>Follow the <a href="https://github.com/DollhouseMCP/mcp-server">DollhouseMCP journey</a> as we continue pushing the boundaries of what’s possible in AI-assisted development - from anywhere.</em></p>
+
+<hr />
+
+<p><strong>Tags</strong>: #MobileDevelopment #ClaudeCode #tmux #BlinkShell #RemoteDevelopment #DollhouseMCP #AIAssistedCoding #iPhoneDevelopment #SSH #ModelContextProtocol</p>
+
+<p><strong>Published</strong>: August 18, 2025<br />
+<strong>Author</strong>: DollhouseMCP Team<br />
+<strong>Reading Time</strong>: 10 minutes</p>
+
+  </div>
+
+  
+  <div class="post-nav">
+    
+    <a href="../../blog/fixing-mcp-server-disconnected-claude-desktop/">
+      <em>Previous Post</em>
+      <strong>How We Fixed the 'Server Disconnected' Error in Claude Desktop MCP Servers</strong>
+    </a>
+    
+    
+    <a href="../../blog/the-15-minute-mystery-ai-agents-chase-ghosts-in-ci/">
+      <em>Next Post</em>
+      <strong>The 15-Minute Mystery: When AI Agents Chase Ghosts in CI/CD</strong>
+    </a>
+    
+  </div>
+  
+</article>
+
+    </main>
+
+    <footer class="site-footer">
+  <p>&copy; 2026 DollhouseMCP Inc.</p>
+  <p class="footer-links">
+    <a href="../../blog/">Blog</a>
+    <a href="../../about.html">About</a>
+    <a href="../../licensing.html">Licensing</a>
+    <a href="https://dollhouseresearch.com/">Dollhouse Research</a>
+    <a href="https://github.com/DollhouseMCP/mcp-server">GitHub</a>
+    <a href="https://www.npmjs.com/package/@dollhousemcp/mcp-server">NPM</a>
+    <a href="https://collection.dollhousemcp.com/">Collection</a>
+    <a href="../../blog/feed.xml">RSS</a>
+  </p>
+</footer>
+
+    <script src="../../assets/js/site.js" defer></script>
+    
+  </body>
+</html>
